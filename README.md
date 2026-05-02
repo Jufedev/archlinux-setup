@@ -46,29 +46,12 @@ ping -c 1 archlinux.org
 
 ```bash
 curl -LO https://raw.githubusercontent.com/juanseproy/prueba-arch/main/scripts/install.sh
-```
-
-4. **Editar las variables** al inicio del script antes de ejecutarlo:
-
-```bash
-vim install.sh
-```
-
-| Variable | Qué es | Ejemplo |
-|----------|--------|---------|
-| `DISK` | Disco destino (verificar con `lsblk`) | `/dev/sda` o `/dev/nvme0n1` |
-| `HOSTNAME` | Nombre del equipo | `archlinux` |
-| `USERNAME` | Tu usuario | `jufedev` |
-| `TIMEZONE` | Zona horaria | `America/Bogota` |
-| `REPO_URL` | URL de este repo | (ya configurado) |
-
-5. Ejecutar:
-
-```bash
 bash install.sh
 ```
 
-6. Al terminar:
+El script te va a pedir los datos de forma interactiva: disco destino, hostname, usuario, timezone, etc. Muestra los discos disponibles y un resumen antes de confirmar.
+
+4. Al terminar:
 
 ```bash
 umount -R /mnt

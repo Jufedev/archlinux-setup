@@ -12,19 +12,39 @@ ok()    { echo -e "${G}[OK]${NC}    $1"; }
 warn()  { echo -e "${Y}[WARN]${NC}  $1"; }
 fail()  { echo -e "${R}[FAIL]${NC}  $1"; exit 1; }
 
-# ── Configuración ──────────────────────────────────────────────────────────
-DISK="/dev/sda"          # Disco destino (cambiar si es necesario)
-HOSTNAME="archlinux"
-USERNAME="jufedev"
-TIMEZONE="America/Bogota"
-LOCALE="en_US.UTF-8"
-KEYMAP="us"
+# ── Validaciones iniciales ─────────────────────────────────────────────────
+[[ $EUID -ne 0 ]] && fail "Ejecuta este script como root"
+[[ ! -d /sys/firmware/efi ]] && fail "Este script requiere modo UEFI — reinicia en modo UEFI desde el BIOS"
+
 REPO_URL="https://github.com/juanseproy/prueba-arch.git"
 
-# ── Validaciones ───────────────────────────────────────────────────────────
-[[ $EUID -ne 0 ]] && fail "Ejecuta este script como root"
+# ── Configuración interactiva ─────────────────────────────────────────────
+echo -e "\n${Y}╔══════════════════════════════════════════════════════╗${NC}"
+echo -e "${Y}║  Arch Linux — Instalación Base (UEFI / GPT)         ║${NC}"
+echo -e "${Y}╚══════════════════════════════════════════════════════╝${NC}\n"
+
+info "Discos disponibles:"
+lsblk -d -o NAME,SIZE,MODEL -e 7,11
+echo ""
+
+read -rp "Disco destino (ej: /dev/sda, /dev/nvme0n1): " DISK
+[[ -z "$DISK" ]] && fail "Debes especificar un disco"
 [[ ! -b "$DISK" ]] && fail "Disco $DISK no encontrado"
-[[ ! -d /sys/firmware/efi ]] && fail "Este script requiere modo UEFI — reinicia en modo UEFI desde el BIOS"
+
+read -rp "Hostname [archlinux]: " HOSTNAME
+HOSTNAME="${HOSTNAME:-archlinux}"
+
+read -rp "Usuario [jufedev]: " USERNAME
+USERNAME="${USERNAME:-jufedev}"
+
+read -rp "Timezone [America/Bogota]: " TIMEZONE
+TIMEZONE="${TIMEZONE:-America/Bogota}"
+
+read -rp "Locale [en_US.UTF-8]: " LOCALE
+LOCALE="${LOCALE:-en_US.UTF-8}"
+
+read -rp "Keymap [us]: " KEYMAP
+KEYMAP="${KEYMAP:-us}"
 
 if [[ "$DISK" == *"nvme"* ]]; then
     PART1="${DISK}p1"
@@ -34,10 +54,16 @@ else
     PART2="${DISK}2"
 fi
 
-echo -e "\n${Y}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${Y}║  Arch Linux — Instalación Base (UEFI / GPT)         ║${NC}"
-echo -e "${Y}╚══════════════════════════════════════════════════════╝${NC}\n"
-
+# ── Resumen y confirmación ────────────────────────────────────────────────
+echo ""
+info "Resumen de configuración:"
+echo "  Disco:    $DISK ($PART1 = EFI, $PART2 = root)"
+echo "  Hostname: $HOSTNAME"
+echo "  Usuario:  $USERNAME"
+echo "  Timezone: $TIMEZONE"
+echo "  Locale:   $LOCALE"
+echo "  Keymap:   $KEYMAP"
+echo ""
 echo -e "${R}ADVERTENCIA: Esto borrará TODO en ${DISK}${NC}"
 read -rp "¿Continuar? (s/N): " confirm
 [[ "$confirm" != "s" && "$confirm" != "S" ]] && exit 0
