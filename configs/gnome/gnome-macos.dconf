@@ -3,6 +3,9 @@
 # Cargar con: dconf load / < gnome-macos.dconf
 # ============================================================================
 
+[org/gnome/shell]
+enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@auber.me', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com']
+
 [org/gnome/desktop/interface]
 gtk-theme='WhiteSur-Light'
 icon-theme='WhiteSur'
@@ -30,10 +33,25 @@ experimental-features=['scale-monitor-framebuffer']
 [org/gnome/shell/extensions/dash-to-dock]
 dock-position='BOTTOM'
 dash-max-icon-size=48
-intellihide-mode='ALL_WINDOWS'
+dock-fixed=true
+extend-height=false
 background-opacity=0.6
-transparency-mode='DYNAMIC'
+transparency-mode='FIXED'
 running-indicator-style='DOTS'
+show-trash=true
+show-mounts=false
+custom-theme-shrink=true
+apply-custom-theme=false
+
+[org/gnome/shell/extensions/blur-my-shell]
+sigma=30
+
+[org/gnome/shell/extensions/blur-my-shell/panel]
+blur=true
+
+[org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
+blur=true
+sigma=30
 
 [org/gnome/shell/extensions/just-perfection]
 activities-button=false

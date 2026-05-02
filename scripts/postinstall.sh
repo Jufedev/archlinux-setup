@@ -66,7 +66,8 @@ install_gnome() {
         gnome-control-center \
         gnome-tweaks \
         gnome-shell-extensions \
-        gnome-keyring
+        gnome-keyring \
+        gnome-menus
 
     # File manager
     pac_install nautilus
@@ -120,6 +121,12 @@ install_theme() {
     aur_install gtk-engine-murrine whitesur-gtk-theme whitesur-icon-theme whitesur-cursor-theme
 
     ok "Tema WhiteSur instalado"
+
+    info "Aplicando tema WhiteSur a apps libadwaita (GTK4)..."
+    mkdir -p "$HOME/.config/gtk-4.0"
+    cp -rf /usr/share/themes/WhiteSur-Light/gtk-4.0/* "$HOME/.config/gtk-4.0/"
+    ok "Override GTK4/libadwaita aplicado (botones macOS en todas las ventanas)"
+
     info "Para parchear GDM: cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
 }
 
