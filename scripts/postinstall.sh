@@ -21,6 +21,11 @@ LOG_FILE="/tmp/arch-macos-setup.log"
 
 [[ ! -d "$CONFIGS_DIR" ]] && fail "Directorio de configs no encontrado: $CONFIGS_DIR"
 
+# ── Sincronizar base de datos de pacman ───────────────────────────────────
+info "Sincronizando base de datos de pacman..."
+sudo pacman -Sy --noconfirm &>/dev/null
+ok "Base de datos sincronizada"
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 pac_install() {
     info "Instalando (pacman): $*"
@@ -35,7 +40,7 @@ aur_install() {
 ensure_yay() {
     if ! command -v yay &>/dev/null; then
         step "Instalando yay (AUR helper)"
-        pac_install git base-devel
+        pac_install git base-devel go
         local tmpdir
         tmpdir=$(mktemp -d)
         git clone https://aur.archlinux.org/yay.git "$tmpdir/yay"
@@ -101,11 +106,11 @@ install_gnome() {
 install_theme() {
     step "2/8 — Tema WhiteSur (macOS)"
 
-    aur_install whitesur-gtk-theme-git whitesur-icon-theme-git whitesur-cursor-theme-git
+    pac_install sassc
+    aur_install gtk-engine-murrine whitesur-gtk-theme whitesur-icon-theme whitesur-cursor-theme
 
     ok "Tema WhiteSur instalado"
-    info "Para parchear Firefox: cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey"
-    info "Para parchear GDM:     cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
+    info "Para parchear GDM: cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
 }
 
 install_extensions() {
@@ -205,6 +210,7 @@ install_apps() {
     step "7/8 — Apps equivalentes a macOS"
 
     pac_install flameshot
+    aur_install google-chrome microsoft-edge-stable-bin
 
     ok "Apps instaladas"
 }
@@ -246,8 +252,7 @@ run_all() {
     echo ""
     echo "Post-setup manual:"
     echo "  • Activar extensiones en GNOME Extensions"
-    echo "  • Parchear Firefox: cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey"
-    echo "  • Parchear GDM:     cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
+    echo "  • Parchear GDM: cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
     echo "  • Configurar Ulauncher hotkey (Alt+Space)"
     echo "  • Descargar wallpapers macOS y aplicarlos"
     echo ""

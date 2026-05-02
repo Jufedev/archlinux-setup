@@ -98,10 +98,9 @@ O usar flags directamente:
 ### Paso 3 — Ajustes manuales
 
 1. **Activar extensiones** → abrir GNOME Extensions y habilitar las instaladas
-2. **Parchear Firefox** → `cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey`
-3. **Parchear GDM** → `cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g`
-4. **Ulauncher hotkey** → abrir Preferences y configurar Alt+Space
-5. **Wallpaper** → descargar desde [Basic Apple Guy](https://basicappleguy.com/basicappleblog/macOS-sonoma-wallpapers)
+2. **Parchear GDM** → `cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g`
+3. **Ulauncher hotkey** → abrir Preferences y configurar Alt+Space
+4. **Wallpaper** → descargar desde [Basic Apple Guy](https://basicappleguy.com/basicappleblog/macOS-sonoma-wallpapers)
 
 ## Qué se instala (y qué NO)
 
@@ -133,6 +132,8 @@ Console, ni ningún juego
 | Calculator | GNOME Calculator | `gnome-calculator` |
 | Calendar | GNOME Calendar | `gnome-calendar` |
 | iStatMenus | Vitals | `gnome-shell-extension-vitals` |
+| Safari / Chrome | Google Chrome | `google-chrome` (AUR) |
+| — | Microsoft Edge | `microsoft-edge-stable-bin` (AUR) |
 
 ### Paquetes opcionales (descomenta en el script)
 
