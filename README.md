@@ -90,7 +90,7 @@ O usar flags directamente:
 | `--fonts` | Inter + JetBrainsMono Nerd Font |
 | `--terminal` | Kitty + Zsh + Starship + plugins |
 | `--spotlight` | Ulauncher |
-| `--apps` | Flameshot |
+| `--apps` | Flameshot, Chrome, Edge, ufw, Podman + Distrobox |
 | `--tweaks` | Aplica toda la configuración visual desde `gnome-macos.dconf` |
 
 > `--tweaks` aplica la configuración de GNOME (tema, fuentes, extensiones, touchpad, layout). Ejecutarlo siempre como último paso, o después de instalar módulos individuales.
@@ -134,6 +134,8 @@ Console, ni ningún juego
 | iStatMenus | Vitals | `gnome-shell-extension-vitals` |
 | Safari / Chrome | Google Chrome | `google-chrome` (AUR) |
 | — | Microsoft Edge | `microsoft-edge-stable-bin` (AUR) |
+| — | ufw (firewall) | `ufw` |
+| Docker Desktop | Podman + Distrobox | `podman` `distrobox` |
 
 ### Paquetes opcionales (descomenta en el script)
 
@@ -155,5 +157,4 @@ simple-scan          — escaneo de documentos
 
 ## TODO
 
-- [ ] Script para ClamAV
 - [ ] Exportar versiones exactas de paquetes instalados

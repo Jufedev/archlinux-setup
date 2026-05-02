@@ -106,6 +106,16 @@ install_gnome() {
 install_theme() {
     step "2/8 — Tema WhiteSur (macOS)"
 
+    # Remover versiones -git si existen (evita conflictos)
+    local git_pkgs=""
+    for pkg in whitesur-gtk-theme-git whitesur-icon-theme-git whitesur-cursor-theme-git; do
+        pacman -Q "$pkg" &>/dev/null && git_pkgs+="$pkg "
+    done
+    if [[ -n "$git_pkgs" ]]; then
+        warn "Removiendo versiones -git conflictivas: $git_pkgs"
+        sudo pacman -Rns --noconfirm $git_pkgs
+    fi
+
     pac_install sassc
     aur_install gtk-engine-murrine whitesur-gtk-theme whitesur-icon-theme whitesur-cursor-theme
 
@@ -207,12 +217,25 @@ install_spotlight() {
 }
 
 install_apps() {
-    step "7/8 — Apps equivalentes a macOS"
+    step "7/8 — Apps, seguridad y entorno de desarrollo"
 
+    # Apps
     pac_install flameshot
     aur_install google-chrome microsoft-edge-stable-bin
 
-    ok "Apps instaladas"
+    # Firewall
+    pac_install ufw
+    sudo ufw default deny incoming
+    sudo ufw default allow outgoing
+    sudo ufw --force enable
+    sudo systemctl enable ufw
+    ok "Firewall (ufw) configurado — deny incoming, allow outgoing"
+
+    # Containers para desarrollo
+    pac_install podman distrobox
+    ok "Distrobox + Podman instalados"
+
+    ok "Apps, seguridad y entorno de desarrollo listos"
 }
 
 apply_tweaks() {
