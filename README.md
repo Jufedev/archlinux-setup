@@ -38,18 +38,21 @@ arch-setup/
 iwctl
 station wlan0 connect "TU_SSID"
 
-# Ethernet: ya debería estar conectado, verificar con:
-ping -c 1 archlinux.org
+# Ethernet: debería conectar automáticamente
 ```
 
-3. Descargar y ejecutar el script de instalación:
+3. Descargar y ejecutar:
 
 ```bash
-curl -LO https://raw.githubusercontent.com/juanseproy/prueba-arch/main/scripts/install.sh
+curl -LO https://raw.githubusercontent.com/Jufedev/archlinux-setup/main/scripts/install.sh
 bash install.sh
 ```
 
-El script te va a pedir los datos de forma interactiva: disco destino, hostname, usuario, timezone, etc. Muestra los discos disponibles y un resumen antes de confirmar.
+El script se encarga de todo automáticamente:
+- Verifica internet, sincroniza el reloj (NTP) y actualiza el keyring
+- Te pide los datos de forma interactiva (disco, hostname, usuario, timezone)
+- Muestra los discos disponibles y un resumen antes de confirmar
+- Particiona (GPT), formatea, instala el sistema base y configura GRUB
 
 4. Al terminar:
 
@@ -65,7 +68,7 @@ reboot
 Loguearse y ejecutar:
 
 ```bash
-cd ~/prueba-arch
+cd ~/archlinux-setup
 bash scripts/postinstall.sh --all
 ```
 

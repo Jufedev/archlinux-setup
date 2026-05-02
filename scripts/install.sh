@@ -16,7 +16,20 @@ fail()  { echo -e "${R}[FAIL]${NC}  $1"; exit 1; }
 [[ $EUID -ne 0 ]] && fail "Ejecuta este script como root"
 [[ ! -d /sys/firmware/efi ]] && fail "Este script requiere modo UEFI — reinicia en modo UEFI desde el BIOS"
 
-REPO_URL="https://github.com/juanseproy/prueba-arch.git"
+REPO_URL="https://github.com/Jufedev/archlinux-setup.git"
+
+# ── Preparación del entorno live ──────────────────────────────────────────
+info "Verificando conexión a internet..."
+ping -c 1 -W 3 archlinux.org &>/dev/null || fail "Sin conexión a internet — conecta con: iwctl station wlan0 connect TU_SSID"
+ok "Internet disponible"
+
+info "Sincronizando reloj (NTP)..."
+timedatectl set-ntp true
+ok "Reloj sincronizado"
+
+info "Actualizando keyring de pacman..."
+pacman -Sy --noconfirm archlinux-keyring &>/dev/null
+ok "Keyring actualizado"
 
 # ── Configuración interactiva ─────────────────────────────────────────────
 echo -e "\n${Y}╔══════════════════════════════════════════════════════╗${NC}"
@@ -175,4 +188,4 @@ echo "  1. umount -R /mnt"
 echo "  2. reboot"
 echo "  3. Loguearse como ${USERNAME} (contraseña temporal: ${USERNAME})"
 echo "  4. El sistema te pedirá cambiar la contraseña en el primer login"
-echo "  5. Ejecutar: bash ~/prueba-arch/scripts/postinstall.sh"
+echo "  5. Ejecutar: bash ~/archlinux-setup/scripts/postinstall.sh"
