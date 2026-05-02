@@ -33,8 +33,11 @@ experimental-features=['scale-monitor-framebuffer']
 [org/gnome/shell/extensions/dash-to-dock]
 dock-position='BOTTOM'
 dash-max-icon-size=48
-dock-fixed=true
+dock-fixed=false
 extend-height=false
+autohide=false
+intellihide=true
+intellihide-mode='FOCUS_APPLICATION_WINDOWS'
 background-opacity=0.6
 transparency-mode='FIXED'
 running-indicator-style='DOTS'
