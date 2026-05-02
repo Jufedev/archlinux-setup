@@ -22,6 +22,7 @@ clock-show-seconds=false
 [org/gnome/desktop/wm/preferences]
 titlebar-font='Inter Medium 11'
 button-layout='close,minimize,maximize:'
+num-workspaces=1
 
 [org/gnome/desktop/peripherals/touchpad]
 tap-to-click=true
@@ -29,6 +30,7 @@ natural-scroll=true
 
 [org/gnome/mutter]
 experimental-features=['scale-monitor-framebuffer']
+dynamic-workspaces=false
 
 [org/gnome/shell/extensions/dash-to-dock]
 dock-position='BOTTOM'
@@ -60,6 +62,10 @@ sigma=30
 activities-button=false
 app-menu=false
 workspace-popup=false
+workspace=false
+workspace-switcher-size=0
+clock-menu-position=2
+clock-menu-position-offset=0
 animation=3
 
 [org/gnome/shell/extensions/user-theme]

@@ -92,6 +92,35 @@ install_gnome() {
     sudo systemctl enable gdm
     ok "GNOME mínimo instalado y GDM habilitado"
 
+    # ── Remover bloat de dependencias ──
+    info "Removiendo apps innecesarias (dependencias no deseadas)..."
+
+    if pacman -Q gvfs-dnssd &>/dev/null; then
+        sudo pacman -Rns --noconfirm gvfs-dnssd
+    fi
+
+    if pacman -Q avahi &>/dev/null; then
+        sudo pacman -Rns --noconfirm avahi 2>/dev/null || {
+            warn "avahi es dependencia requerida — ocultando apps del menú"
+            mkdir -p "$HOME/.local/share/applications"
+            for app in bssh bvnc avahi-discover; do
+                printf '[Desktop Entry]\nNoDisplay=true\n' > "$HOME/.local/share/applications/${app}.desktop"
+            done
+        }
+    fi
+
+    if pacman -Q v4l-utils &>/dev/null; then
+        sudo pacman -Rns --noconfirm v4l-utils 2>/dev/null || {
+            warn "v4l-utils es dependencia requerida — ocultando apps del menú"
+            mkdir -p "$HOME/.local/share/applications"
+            for app in qv4l2 qvidcap; do
+                printf '[Desktop Entry]\nNoDisplay=true\n' > "$HOME/.local/share/applications/${app}.desktop"
+            done
+        }
+    fi
+
+    ok "Bloat removido"
+
     # ── Paquetes opcionales (descomenta lo que necesites) ──
     # pac_install gnome-font-viewer      # Visor de fuentes
     # pac_install gnome-logs             # Visor de logs del sistema
