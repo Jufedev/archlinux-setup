@@ -11,52 +11,111 @@ Instalación automatizada de Arch Linux con GNOME mínimo, sin bloatware, config
 ```
 arch-setup/
 ├── scripts/
-│   ├── install.sh          # Instalación base (desde USB live, BIOS Legacy)
-│   └── postinstall.sh      # Setup macOS (GNOME, temas, terminal, apps)
+│   ├── install.sh              # Instalación base (UEFI/GPT)
+│   └── postinstall.sh          # Setup visual macOS + apps
 ├── configs/
-│   ├── kitty/
-│   │   └── kitty.conf      # Terminal con Catppuccin Mocha
-│   ├── starship/
-│   │   └── starship.toml   # Prompt minimalista con iconos
-│   └── gnome/
-│       └── gnome-macos.dconf  # Dump de configuración GNOME
+│   ├── kitty/kitty.conf        # Terminal con Catppuccin Mocha
+│   ├── starship/starship.toml  # Prompt minimalista con iconos
+│   └── gnome/gnome-macos.dconf # Configuración GNOME completa
 └── README.md
 ```
 
+## Requisitos
+
+- USB live de Arch Linux (bootear en modo **UEFI**, no Legacy)
+- Conexión a internet (WiFi o Ethernet)
+- Disco destino identificado (`lsblk` para verificar)
+
 ## Uso
 
-### 1. Instalación base (desde USB live de Arch)
+### Paso 1 — Instalación base (desde el USB live)
+
+1. Bootear el USB en modo **UEFI** desde el BIOS
+2. Conectar a internet:
 
 ```bash
-iwctl                              # Conectar a internet
-# station wlan0 connect "SSID"
+# WiFi
+iwctl
+station wlan0 connect "TU_SSID"
 
+# Ethernet: ya debería estar conectado, verificar con:
+ping -c 1 archlinux.org
+```
+
+3. Descargar y ejecutar el script de instalación:
+
+```bash
 curl -LO https://raw.githubusercontent.com/juanseproy/prueba-arch/main/scripts/install.sh
+```
+
+4. **Editar las variables** al inicio del script antes de ejecutarlo:
+
+```bash
+vim install.sh
+```
+
+| Variable | Qué es | Ejemplo |
+|----------|--------|---------|
+| `DISK` | Disco destino (verificar con `lsblk`) | `/dev/sda` o `/dev/nvme0n1` |
+| `HOSTNAME` | Nombre del equipo | `archlinux` |
+| `USERNAME` | Tu usuario | `jufedev` |
+| `TIMEZONE` | Zona horaria | `America/Bogota` |
+| `REPO_URL` | URL de este repo | (ya configurado) |
+
+5. Ejecutar:
+
+```bash
 bash install.sh
 ```
 
-> Edita las variables al inicio de `install.sh` (disco, hostname, timezone, usuario).
+6. Al terminar:
 
-### 2. Post-instalación (después del primer boot)
+```bash
+umount -R /mnt
+reboot
+```
+
+> La contraseña temporal es tu nombre de usuario. El sistema te pedirá cambiarla en el primer login.
+
+### Paso 2 — Post-instalación (después del primer boot)
+
+Loguearse y ejecutar:
 
 ```bash
 cd ~/prueba-arch
-bash scripts/postinstall.sh --all   # Todo de una vez
-bash scripts/postinstall.sh         # Menú interactivo
+bash scripts/postinstall.sh --all
 ```
 
-### Módulos individuales
+Esto instala todo de una vez: GNOME, tema, extensiones, fuentes, terminal, Ulauncher, apps y configuración visual.
+
+Para elegir módulos individuales, ejecutar sin argumentos para el menú interactivo:
 
 ```bash
-bash scripts/postinstall.sh --gnome       # GNOME mínimo
-bash scripts/postinstall.sh --theme       # Tema WhiteSur
-bash scripts/postinstall.sh --extensions  # Extensiones
-bash scripts/postinstall.sh --fonts       # Fuentes
-bash scripts/postinstall.sh --terminal    # Kitty + Zsh + Starship
-bash scripts/postinstall.sh --spotlight   # Ulauncher
-bash scripts/postinstall.sh --apps        # Apps extra
-bash scripts/postinstall.sh --tweaks      # Ajustes finales
+bash scripts/postinstall.sh
 ```
+
+O usar flags directamente:
+
+| Flag | Qué instala |
+|------|-------------|
+| `--gnome` | GNOME mínimo + GDM |
+| `--theme` | Tema WhiteSur (GTK + iconos + cursores) |
+| `--extensions` | Extensiones GNOME (Dash to Dock, Blur, Vitals, etc.) |
+| `--fonts` | Inter + JetBrainsMono Nerd Font |
+| `--terminal` | Kitty + Zsh + Starship + plugins |
+| `--spotlight` | Ulauncher |
+| `--apps` | Flameshot |
+| `--tweaks` | Aplica toda la configuración visual desde `gnome-macos.dconf` |
+
+> `--tweaks` aplica la configuración de GNOME (tema, fuentes, extensiones, touchpad, layout). Ejecutarlo siempre como último paso, o después de instalar módulos individuales.
+
+### Paso 3 — Ajustes manuales
+
+1. **Activar extensiones** → abrir GNOME Extensions y habilitar las instaladas
+2. **Parchear Firefox** → `cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey`
+3. **Parchear GDM** → `cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g`
+4. **Ulauncher hotkey** → abrir Preferences y configurar Alt+Space
+5. **Wallpaper** → descargar desde [Basic Apple Guy](https://basicappleguy.com/basicappleblog/macOS-sonoma-wallpapers)
 
 ## Qué se instala (y qué NO)
 
@@ -73,7 +132,7 @@ gnome-terminal (usamos Kitty), GNOME Maps, Weather, Music, Photos, Contacts,
 Cheese, Totem, Epiphany, GNOME Boxes, Connections, Characters, Logs, Tour,
 Console, ni ningún juego
 
-### Apps equivalentes a macOS
+### Equivalencias macOS → Linux
 
 | macOS | Linux | Paquete |
 |---|---|---|
@@ -103,17 +162,8 @@ seahorse             — gestor de contraseñas/llaves
 simple-scan          — escaneo de documentos
 ```
 
-## Post-setup manual
+## Hardware compatible
 
-1. **Activar extensiones** → GNOME Extensions
-2. **Parchear Firefox** → `cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey`
-3. **Parchear GDM** → `cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g`
-4. **Ulauncher hotkey** → Alt+Space en Preferences
-5. **Wallpaper** → [Basic Apple Guy](https://basicappleguy.com/basicappleblog/macOS-sonoma-wallpapers)
-
-## Procesadores compatibles
-
-- i3-2330M
 - Ryzen 7 5700G
 
 ## TODO

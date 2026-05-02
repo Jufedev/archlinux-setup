@@ -12,11 +12,14 @@ R='\033[0;31m'; G='\033[0;32m'; Y='\033[1;33m'; B='\033[0;34m'; C='\033[0;36m'; 
 info()  { echo -e "${B}[INFO]${NC}  $1"; }
 ok()    { echo -e "${G}[OK]${NC}    $1"; }
 warn()  { echo -e "${Y}[WARN]${NC}  $1"; }
+fail()  { echo -e "${R}[FAIL]${NC}  $1"; exit 1; }
 step()  { echo -e "\n${C}━━━ $1 ━━━${NC}\n"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIGS_DIR="${SCRIPT_DIR}/../configs"
 LOG_FILE="/tmp/arch-macos-setup.log"
+
+[[ ! -d "$CONFIGS_DIR" ]] && fail "Directorio de configs no encontrado: $CONFIGS_DIR"
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 pac_install() {
@@ -100,17 +103,7 @@ install_theme() {
 
     aur_install whitesur-gtk-theme-git whitesur-icon-theme-git whitesur-cursor-theme-git
 
-    info "Aplicando tema GTK..."
-    gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Light'
-    gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur'
-    gsettings set org.gnome.desktop.interface cursor-theme 'WhiteSur-cursors'
-    gsettings set org.gnome.desktop.interface color-scheme 'default'
-
-    # Intentar aplicar tema al shell (requiere extensión User Themes)
-    gsettings set org.gnome.shell.extensions.user-theme name 'WhiteSur-Light' 2>/dev/null || \
-        warn "Activa la extensión User Themes para aplicar el tema al shell"
-
-    ok "Tema WhiteSur aplicado"
+    ok "Tema WhiteSur instalado"
     info "Para parchear Firefox: cd /usr/share/themes/WhiteSur-Light && ./tweaks.sh -f monterey"
     info "Para parchear GDM:     cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
 }
@@ -129,28 +122,6 @@ install_extensions() {
 
     ok "Extensiones instaladas"
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
-
-    # Configurar Dash to Dock via dconf (si está disponible)
-    if command -v dconf &>/dev/null; then
-        info "Configurando Dash to Dock..."
-        dconf write /org/gnome/shell/extensions/dash-to-dock/dock-position "'BOTTOM'"
-        dconf write /org/gnome/shell/extensions/dash-to-dock/dash-max-icon-size 48
-        dconf write /org/gnome/shell/extensions/dash-to-dock/intellihide-mode "'ALL_WINDOWS'"
-        dconf write /org/gnome/shell/extensions/dash-to-dock/background-opacity 0.6
-        dconf write /org/gnome/shell/extensions/dash-to-dock/transparency-mode "'DYNAMIC'"
-        dconf write /org/gnome/shell/extensions/dash-to-dock/running-indicator-style "'DOTS'"
-        ok "Dash to Dock configurado"
-    fi
-
-    # Configurar Just Perfection
-    if command -v dconf &>/dev/null; then
-        info "Configurando Just Perfection..."
-        dconf write /org/gnome/shell/extensions/just-perfection/activities-button false
-        dconf write /org/gnome/shell/extensions/just-perfection/app-menu false
-        dconf write /org/gnome/shell/extensions/just-perfection/workspace-popup false
-        dconf write /org/gnome/shell/extensions/just-perfection/animation 3
-        ok "Just Perfection configurado"
-    fi
 }
 
 install_fonts() {
@@ -158,17 +129,7 @@ install_fonts() {
 
     aur_install ttf-inter ttf-jetbrains-mono-nerd
 
-    info "Aplicando fuentes en GNOME..."
-    gsettings set org.gnome.desktop.interface font-name 'Inter Regular 11'
-    gsettings set org.gnome.desktop.interface document-font-name 'Inter Regular 11'
-    gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'
-    gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Inter Medium 11'
-
-    # Hinting y antialiasing
-    gsettings set org.gnome.desktop.interface font-hinting 'slight'
-    gsettings set org.gnome.desktop.interface font-antialiasing 'rgba'
-
-    ok "Fuentes configuradas"
+    ok "Fuentes instaladas"
 }
 
 install_terminal() {
@@ -176,15 +137,6 @@ install_terminal() {
 
     pac_install kitty zsh starship
     aur_install zsh-autosuggestions zsh-syntax-highlighting
-
-    # Instalar Oh My Zsh (no interactivo)
-    if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-        info "Instalando Oh My Zsh..."
-        RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || true
-        ok "Oh My Zsh instalado"
-    else
-        ok "Oh My Zsh ya está instalado"
-    fi
 
     # Copiar configs
     info "Copiando configuración de Kitty..."
@@ -198,15 +150,13 @@ install_terminal() {
     ok "starship.toml copiado"
 
     # Configurar .zshrc
+    if [[ -f "$HOME/.zshrc" ]]; then
+        cp "$HOME/.zshrc" "$HOME/.zshrc.bak"
+        warn ".zshrc existente respaldado en .zshrc.bak"
+    fi
     info "Configurando .zshrc..."
     cat > "$HOME/.zshrc" <<'ZSHRC'
-# ── Oh My Zsh ──────────────────────────────────────────────────────────────
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
-plugins=(git z)
-source $ZSH/oh-my-zsh.sh
-
-# ── Plugins externos ──────────────────────────────────────────────────────
+# ── Plugins ───────────────────────────────────────────────────────────────
 [[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
     source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 [[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
@@ -260,28 +210,17 @@ install_apps() {
 }
 
 apply_tweaks() {
-    step "8/8 — Ajustes finales estilo macOS"
+    step "8/8 — Configuración GNOME (dconf)"
 
-    # Botones de ventana a la izquierda (como macOS)
-    info "Moviendo botones de ventana a la izquierda..."
-    gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
+    if ! command -v dconf &>/dev/null; then
+        warn "dconf no disponible — ejecuta este paso después del primer login con GNOME"
+        return
+    fi
 
-    # Scaling fraccional (para HiDPI)
-    info "Habilitando scaling fraccional..."
-    gsettings set org.gnome.mutter experimental-features "['scale-monitor-framebuffer']"
+    info "Cargando configuración GNOME desde gnome-macos.dconf..."
+    dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
-    # Animaciones
-    info "Configurando animaciones..."
-    gsettings set org.gnome.desktop.interface enable-animations true
-
-    # Reloj con formato 12h o 24h
-    gsettings set org.gnome.desktop.interface clock-show-seconds false
-
-    # Tap to click en touchpad
-    gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
-    gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll true
-
-    ok "Ajustes aplicados"
+    ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
 
 # ============================================================================
@@ -315,37 +254,39 @@ run_all() {
 }
 
 show_menu() {
-    echo -e "\n${C}╔══════════════════════════════════════════════════════╗${NC}"
-    echo -e "${C}║  Arch Linux — Setup estilo macOS                    ║${NC}"
-    echo -e "${C}╚══════════════════════════════════════════════════════╝${NC}\n"
-    echo "  1) Instalar todo (recomendado)"
-    echo "  2) Solo GNOME base"
-    echo "  3) Solo tema WhiteSur"
-    echo "  4) Solo extensiones GNOME"
-    echo "  5) Solo fuentes"
-    echo "  6) Solo terminal (Kitty + Zsh + Starship)"
-    echo "  7) Solo Ulauncher"
-    echo "  8) Solo apps"
-    echo "  9) Solo ajustes finales"
-    echo "  0) Salir"
-    echo ""
-    read -rp "Selecciona una opción: " choice
-
     ensure_yay
 
-    case $choice in
-        1) run_all ;;
-        2) install_gnome ;;
-        3) install_theme ;;
-        4) install_extensions ;;
-        5) install_fonts ;;
-        6) install_terminal ;;
-        7) install_spotlight ;;
-        8) install_apps ;;
-        9) apply_tweaks ;;
-        0) exit 0 ;;
-        *) warn "Opción inválida"; show_menu ;;
-    esac
+    while true; do
+        echo -e "\n${C}╔══════════════════════════════════════════════════════╗${NC}"
+        echo -e "${C}║  Arch Linux — Setup estilo macOS                    ║${NC}"
+        echo -e "${C}╚══════════════════════════════════════════════════════╝${NC}\n"
+        echo "  1) Instalar todo (recomendado)"
+        echo "  2) Solo GNOME base"
+        echo "  3) Solo tema WhiteSur"
+        echo "  4) Solo extensiones GNOME"
+        echo "  5) Solo fuentes"
+        echo "  6) Solo terminal (Kitty + Zsh + Starship)"
+        echo "  7) Solo Ulauncher"
+        echo "  8) Solo apps"
+        echo "  9) Solo ajustes finales"
+        echo "  0) Salir"
+        echo ""
+        read -rp "Selecciona una opción: " choice
+
+        case $choice in
+            1) run_all; break ;;
+            2) install_gnome; break ;;
+            3) install_theme; break ;;
+            4) install_extensions; break ;;
+            5) install_fonts; break ;;
+            6) install_terminal; break ;;
+            7) install_spotlight; break ;;
+            8) install_apps; break ;;
+            9) apply_tweaks; break ;;
+            0) exit 0 ;;
+            *) warn "Opción inválida" ;;
+        esac
+    done
 }
 
 # ── CLI args ───────────────────────────────────────────────────────────────

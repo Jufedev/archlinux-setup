@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Arch Linux — Instalación base (BIOS Legacy / MBR)
+# Arch Linux — Instalación base (UEFI / GPT)
 # Ejecutar desde el USB live de Arch: bash install.sh
 # ============================================================================
 set -euo pipefail
@@ -24,35 +24,44 @@ REPO_URL="https://github.com/juanseproy/prueba-arch.git"
 # ── Validaciones ───────────────────────────────────────────────────────────
 [[ $EUID -ne 0 ]] && fail "Ejecuta este script como root"
 [[ ! -b "$DISK" ]] && fail "Disco $DISK no encontrado"
+[[ ! -d /sys/firmware/efi ]] && fail "Este script requiere modo UEFI — reinicia en modo UEFI desde el BIOS"
+
+if [[ "$DISK" == *"nvme"* ]]; then
+    PART1="${DISK}p1"
+    PART2="${DISK}p2"
+else
+    PART1="${DISK}1"
+    PART2="${DISK}2"
+fi
 
 echo -e "\n${Y}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${Y}║  Arch Linux — Instalación Base (BIOS Legacy)        ║${NC}"
+echo -e "${Y}║  Arch Linux — Instalación Base (UEFI / GPT)         ║${NC}"
 echo -e "${Y}╚══════════════════════════════════════════════════════╝${NC}\n"
 
 echo -e "${R}ADVERTENCIA: Esto borrará TODO en ${DISK}${NC}"
 read -rp "¿Continuar? (s/N): " confirm
 [[ "$confirm" != "s" && "$confirm" != "S" ]] && exit 0
 
-# ── 1. Particionado (MBR, una sola partición) ─────────────────────────────
-info "Particionando $DISK (MBR)..."
-(
-echo o    # Crear tabla de particiones DOS/MBR
-echo n    # Nueva partición
-echo p    # Primaria
-echo 1    # Partición 1
-echo      # Primer sector (default)
-echo      # Último sector (default, usa todo el espacio)
-echo w    # Guardar y salir
-) | fdisk "$DISK" &>/dev/null
+# ── 1. Particionado (GPT, EFI + root) ────────────────────────────────────
+info "Particionando $DISK (GPT)..."
+sgdisk -Z "$DISK" &>/dev/null
+sgdisk -n 1:0:+512M -t 1:ef00 -c 1:"EFI" "$DISK"
+sgdisk -n 2:0:0 -t 2:8300 -c 2:"ROOT" "$DISK"
 ok "Particionado completado"
 
 # ── 2. Formatear y montar ──────────────────────────────────────────────────
-info "Formateando ${DISK}1 como ext4..."
-mkfs.ext4 -F "${DISK}1"
-ok "Formato completado"
+info "Formateando $PART1 como FAT32 (EFI)..."
+mkfs.fat -F32 "$PART1"
+ok "EFI formateada"
+
+info "Formateando $PART2 como ext4..."
+mkfs.ext4 -F "$PART2"
+ok "Root formateada"
 
 info "Montando en /mnt..."
-mount "${DISK}1" /mnt
+mount "$PART2" /mnt
+mkdir -p /mnt/boot/efi
+mount "$PART1" /mnt/boot/efi
 ok "Montado"
 
 # ── 3. Instalar sistema base ──────────────────────────────────────────────
@@ -60,7 +69,7 @@ info "Instalando sistema base con pacstrap..."
 pacstrap -K /mnt \
     base linux linux-firmware \
     base-devel git vim sudo \
-    networkmanager grub \
+    networkmanager grub efibootmgr \
     pipewire pipewire-alsa pipewire-pulse wireplumber
 ok "Sistema base instalado"
 
@@ -100,24 +109,31 @@ sed -i '/\[multilib\]/,/Include/ s/^#//' /etc/pacman.conf
 sed -i 's/#Color/Color/' /etc/pacman.conf
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 10/' /etc/pacman.conf
 
-# GRUB (BIOS Legacy)
-grub-install --target=i386-pc ${DISK}
+# GRUB (UEFI)
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Crear usuario
 useradd -m -G wheel -s /bin/bash ${USERNAME}
 echo "root:root" | chpasswd
 echo "${USERNAME}:${USERNAME}" | chpasswd
+chage -d 0 root
+chage -d 0 ${USERNAME}
 sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 # Servicios
 systemctl enable NetworkManager
-systemctl enable pipewire
 
 # Clonar repo de configuración
 cd /home/${USERNAME}
 git clone ${REPO_URL} || true
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
+
+# Swapfile (4 GB)
+fallocate -l 4G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+echo '/swapfile none swap defaults 0 0' >> /etc/fstab
 
 echo "✓ Chroot configurado"
 CHROOT_SCRIPT
@@ -131,8 +147,6 @@ echo ""
 echo -e "${G}Próximos pasos:${NC}"
 echo "  1. umount -R /mnt"
 echo "  2. reboot"
-echo "  3. Loguearse como ${USERNAME} (contraseña: ${USERNAME})"
-echo "  4. Cambiar contraseña: passwd"
+echo "  3. Loguearse como ${USERNAME} (contraseña temporal: ${USERNAME})"
+echo "  4. El sistema te pedirá cambiar la contraseña en el primer login"
 echo "  5. Ejecutar: bash ~/prueba-arch/scripts/postinstall.sh"
-echo ""
-warn "RECUERDA cambiar la contraseña por defecto después del primer login"
