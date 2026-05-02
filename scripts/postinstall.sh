@@ -172,7 +172,8 @@ install_extensions() {
         gnome-shell-extension-appindicator \
         gnome-shell-extension-vitals \
         gnome-shell-extension-just-perfection-desktop \
-        gnome-shell-extension-clipboard-indicator
+        gnome-shell-extension-clipboard-indicator \
+        gnome-shell-extension-hidetopbar-git
 
     ok "Extensiones instaladas"
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
