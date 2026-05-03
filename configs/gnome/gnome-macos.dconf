@@ -4,7 +4,7 @@
 # ============================================================================
 
 [org/gnome/shell]
-enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@auber.me', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com', 'hidetopbar@mathieu.bidon.ca']
+enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@auber.me', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com', 'hidetopbar@mathieu.bidon.ca', 'dock-magnify@archlinux-setup']
 
 [org/gnome/desktop/interface]
 gtk-theme='WhiteSur-Light'
@@ -45,6 +45,7 @@ transparency-mode='FIXED'
 running-indicator-style='DOTS'
 show-trash=true
 show-mounts=false
+show-apps-at-top=true
 custom-theme-shrink=true
 apply-custom-theme=false
 
@@ -53,6 +54,10 @@ sigma=30
 
 [org/gnome/shell/extensions/blur-my-shell/panel]
 blur=true
+
+[org/gnome/shell/extensions/blur-my-shell/overview]
+blur=true
+style-components=2
 
 [org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
 blur=true

@@ -176,6 +176,16 @@ install_extensions() {
         gnome-shell-extension-hidetopbar-git
 
     ok "Extensiones instaladas"
+
+    # Extensión custom: dock magnification (fish-eye macOS)
+    info "Instalando extensión dock-magnify..."
+    local ext_dir="$HOME/.local/share/gnome-shell/extensions/dock-magnify@archlinux-setup"
+    mkdir -p "$ext_dir"
+    cp "${CONFIGS_DIR}/gnome/dock-magnify/metadata.json" "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/dock-magnify/extension.js" "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/dock-magnify/stylesheet.css" "$ext_dir/"
+    ok "Extensión dock-magnify instalada"
+
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
 }
 
