@@ -4,7 +4,7 @@ Instalación automatizada de Arch Linux con GNOME mínimo, sin bloatware, config
 
 ## Stack
 
-**Arch Linux + GNOME (mínimo)** · WhiteSur theme · Kitty + Zsh + Starship · CachyOS (opcional)
+**Arch Linux + GNOME (mínimo)** · WhiteSur theme · Kitty + Zsh + Starship · Wallpapers dinámicos · CachyOS (opcional)
 
 ## Estructura
 
@@ -98,13 +98,40 @@ O usar flags directamente:
 | `--spotlight` | Ulauncher |
 | `--apps` | Flameshot, Chrome, Edge, ufw, Podman + Distrobox |
 | `--tweaks` | Aplica toda la configuración visual desde `gnome-macos.dconf` |
-| `--cachyos` | Repos optimizados + kernel BORE/EEVDF *(ver Paso 3)* |
+| `--wallpapers` | Wallpapers dinámicos que cambian según la hora (incluido en `--all`) |
+| `--gdm` | Login GDM estilo macOS — solo el ⚙ de apagado visible *(ver Paso 3)* |
+| `--cachyos` | Repos optimizados + kernel BORE/EEVDF *(ver Paso 4)* |
 
 > `--tweaks` aplica la configuración de GNOME (tema, fuentes, extensiones, touchpad, layout). Ejecutarlo siempre como último paso, o después de instalar módulos individuales.
+>
+> `--gdm` requiere sudo y reiniciar GDM. Ejecutarlo por separado después del `--all`.
 
 ---
 
-## Paso 3 — Performance con CachyOS (opcional)
+## Paso 3 — Login GDM estilo macOS (opcional)
+
+Aplica el tema WhiteSur al login screen con una configuración limpia: **solo el ⚙ de apagado/reinicio visible**, sin el botón de accesibilidad.
+
+```bash
+bash scripts/postinstall.sh --gdm
+```
+
+**Qué hace internamente:**
+1. Clona WhiteSur-gtk-theme
+2. Inyecta CSS para ocultar el botón de accesibilidad (`#AccessibilityButton`) antes de compilar el tema
+3. Corre `tweaks.sh -g` con el wallpaper por defecto de WhiteSur (gradiente macOS)
+4. El resultado: pantalla de login minimalista con fondo degradado y solo el control de energía
+
+```bash
+# Para aplicar los cambios sin reiniciar
+sudo systemctl restart gdm
+```
+
+> Este módulo **no está incluido en `--all`** porque requiere sudo y reiniciar GDM. Ejecutarlo una vez después del setup principal.
+
+---
+
+## Paso 4 — Performance con CachyOS (opcional)
 
 Este paso agrega los repositorios de CachyOS a tu instalación de Arch base, sin reemplazarla. Obtenés paquetes del sistema compilados con instrucciones optimizadas para tu CPU y un kernel con mejor responsividad de desktop.
 
@@ -128,12 +155,12 @@ bash scripts/postinstall.sh --cachyos
 
 ---
 
-## Paso 4 — Ajustes manuales
+## Paso 5 — Ajustes manuales
 
 1. **Activar extensiones** → abrir GNOME Extensions y habilitar las instaladas
-2. **Parchear GDM** → `cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g`
-3. **Ulauncher hotkey** → abrir Preferences y configurar Alt+Space
-4. **Wallpaper** → descargar desde [Basic Apple Guy](https://basicappleguy.com/basicappleblog/macOS-sonoma-wallpapers)
+2. **Seleccionar wallpaper dinámico** → Configuración → Fondo → elegir un wallpaper WhiteSur (cambia solo por hora)
+3. **GDM** → correr `bash scripts/postinstall.sh --gdm` (requiere sudo)
+4. **Ulauncher hotkey** → abrir Preferences y configurar Alt+Space
 
 ---
 
@@ -214,3 +241,4 @@ simple-scan          — escaneo de documentos
 
 - [ ] Exportar versiones exactas de paquetes instalados
 - [ ] Dock magnify: modo sin hover (magnificación always-on estilo macOS)
+- [ ] Wallpaper del GDM sincronizado con el wallpaper dinámico del desktop

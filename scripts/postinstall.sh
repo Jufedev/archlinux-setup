@@ -2,7 +2,7 @@
 # ============================================================================
 # Arch Linux — Setup estilo macOS (GNOME)
 # Ejecutar como usuario normal después del primer boot
-# Uso: bash postinstall.sh [--all | --gnome | --theme | --extensions | --fonts | --terminal | --spotlight | --apps | --tweaks | --cachyos]
+# Uso: bash postinstall.sh [--all | --gnome | --theme | --extensions | --fonts | --terminal | --spotlight | --apps | --tweaks | --wallpapers | --gdm | --cachyos]
 # Sin argumentos = menú interactivo
 # ============================================================================
 set -euo pipefail
@@ -302,6 +302,50 @@ apply_tweaks() {
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
 
+install_wallpapers() {
+    step "Wallpapers dinámicos (cambian según la hora)"
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+
+    info "Clonando WhiteSur-wallpapers..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-wallpapers.git "$tmpdir" \
+        2>&1 | tee -a "$LOG_FILE"
+
+    info "Instalando wallpapers dinámicos..."
+    (cd "$tmpdir" && bash install-gnome-backgrounds.sh) 2>&1 | tee -a "$LOG_FILE"
+
+    rm -rf "$tmpdir"
+
+    ok "Wallpapers dinámicos instalados (Ventura, Monterey, WhiteSur, Nord)"
+    info "Andá a Configuración → Fondo de pantalla y seleccioná un wallpaper WhiteSur para activar el cambio automático por hora"
+}
+
+apply_gdm() {
+    step "Login — GDM estilo macOS (solo botón de apagado)"
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+
+    info "Clonando WhiteSur-gtk-theme..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
+        2>&1 | tee -a "$LOG_FILE"
+
+    # Ocultar el botón de accesibilidad antes de compilar el tema
+    # El engranaje de apagado/reinicio queda como único control visible
+    echo "#AccessibilityButton { display: none !important; }" \
+        >> "${tmpdir}/src/main/gnome-shell/_shell-base.scss"
+
+    info "Aplicando tema WhiteSur a GDM (requiere sudo)..."
+    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd -b default) 2>&1 | tee -a "$LOG_FILE"
+
+    rm -rf "$tmpdir"
+
+    ok "GDM configurado — login estilo macOS, solo el ⚙ de apagado visible"
+    warn "Reiniciá GDM para ver los cambios: sudo systemctl restart gdm"
+    info "  (o reiniciá el sistema para aplicar todo de una vez)"
+}
+
 install_cachyos_repos() {
     step "CachyOS — Repos optimizados + kernel BORE/EEVDF"
 
@@ -353,6 +397,7 @@ run_all() {
     install_terminal
     install_spotlight
     install_apps
+    install_wallpapers
     apply_tweaks
 
     echo ""
@@ -385,6 +430,8 @@ show_menu() {
         echo "  7) Solo Ulauncher"
         echo "  8) Solo apps"
         echo "  9) Solo ajustes finales"
+        echo "  w) Wallpapers dinámicos (cambian por hora)"
+        echo "  g) Login GDM estilo macOS (solo botón apagado)"
         echo "  c) CachyOS repos + kernel BORE (performance)"
         echo "  0) Salir"
         echo ""
@@ -400,6 +447,8 @@ show_menu() {
             7) install_spotlight; break ;;
             8) install_apps; break ;;
             9) apply_tweaks; break ;;
+            w) install_wallpapers; break ;;
+            g) apply_gdm; break ;;
             c) install_cachyos_repos; break ;;
             0) exit 0 ;;
             *) warn "Opción inválida" ;;
@@ -417,8 +466,10 @@ case "${1:-}" in
     --terminal)   ensure_yay; install_terminal ;;
     --spotlight)  ensure_yay; install_spotlight ;;
     --apps)       ensure_yay; install_apps ;;
-    --tweaks)     apply_tweaks ;;
-    --cachyos)    install_cachyos_repos ;;
-    "")           show_menu ;;
-    *)            echo "Uso: $0 [--all|--gnome|--theme|--extensions|--fonts|--terminal|--spotlight|--apps|--tweaks|--cachyos]"; exit 1 ;;
+    --tweaks)      apply_tweaks ;;
+    --wallpapers)  install_wallpapers ;;
+    --gdm)         apply_gdm ;;
+    --cachyos)     install_cachyos_repos ;;
+    "")            show_menu ;;
+    *)             echo "Uso: $0 [--all|--gnome|--theme|--extensions|--fonts|--terminal|--spotlight|--apps|--tweaks|--wallpapers|--gdm|--cachyos]"; exit 1 ;;
 esac
