@@ -2,7 +2,7 @@
 # ============================================================================
 # Arch Linux — Setup estilo macOS (GNOME)
 # Ejecutar como usuario normal después del primer boot
-# Uso: bash postinstall.sh [--all | --gnome | --theme | --extensions | --fonts | --terminal | --apps | --tweaks]
+# Uso: bash postinstall.sh [--all | --gnome | --theme | --extensions | --fonts | --terminal | --spotlight | --apps | --tweaks | --cachyos]
 # Sin argumentos = menú interactivo
 # ============================================================================
 set -euo pipefail
@@ -302,6 +302,44 @@ apply_tweaks() {
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
 
+install_cachyos_repos() {
+    step "CachyOS — Repos optimizados + kernel BORE/EEVDF"
+
+    if grep -q "\[cachyos" /etc/pacman.conf; then
+        ok "Repos de CachyOS ya están configurados en /etc/pacman.conf"
+        return
+    fi
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+
+    info "Descargando script oficial de CachyOS..."
+    curl -L "https://mirror.cachyos.org/cachyos-repo.tar.xz" -o "$tmpdir/cachyos-repo.tar.xz" \
+        2>&1 | tee -a "$LOG_FILE"
+    tar xf "$tmpdir/cachyos-repo.tar.xz" -C "$tmpdir"
+
+    info "Configurando repos (auto-detecta x86-64-v3 o v4 según tu CPU)..."
+    (cd "$tmpdir/cachyos-repo" && sudo ./cachyos-repo.sh)
+
+    rm -rf "$tmpdir"
+
+    info "Actualizando sistema con paquetes optimizados (puede tardar varios minutos)..."
+    sudo pacman -Syu --noconfirm 2>&1 | tee -a "$LOG_FILE"
+
+    info "Instalando kernel CachyOS (BORE/EEVDF scheduler)..."
+    sudo pacman -S --noconfirm --needed linux-cachyos linux-cachyos-headers \
+        2>&1 | tee -a "$LOG_FILE"
+
+    if command -v grub-mkconfig &>/dev/null; then
+        info "Regenerando configuración de GRUB..."
+        sudo grub-mkconfig -o /boot/grub/grub.cfg
+    fi
+
+    ok "Repos CachyOS activos — sistema actualizado con instrucciones optimizadas"
+    ok "Kernel linux-cachyos instalado (BORE/EEVDF scheduler)"
+    warn "IMPORTANTE: reinicia para bootear con el nuevo kernel"
+}
+
 # ============================================================================
 # MENÚ PRINCIPAL
 # ============================================================================
@@ -347,6 +385,7 @@ show_menu() {
         echo "  7) Solo Ulauncher"
         echo "  8) Solo apps"
         echo "  9) Solo ajustes finales"
+        echo "  c) CachyOS repos + kernel BORE (performance)"
         echo "  0) Salir"
         echo ""
         read -rp "Selecciona una opción: " choice
@@ -361,6 +400,7 @@ show_menu() {
             7) install_spotlight; break ;;
             8) install_apps; break ;;
             9) apply_tweaks; break ;;
+            c) install_cachyos_repos; break ;;
             0) exit 0 ;;
             *) warn "Opción inválida" ;;
         esac
@@ -378,6 +418,7 @@ case "${1:-}" in
     --spotlight)  ensure_yay; install_spotlight ;;
     --apps)       ensure_yay; install_apps ;;
     --tweaks)     apply_tweaks ;;
+    --cachyos)    install_cachyos_repos ;;
     "")           show_menu ;;
-    *)            echo "Uso: $0 [--all|--gnome|--theme|--extensions|--fonts|--terminal|--spotlight|--apps|--tweaks]"; exit 1 ;;
+    *)            echo "Uso: $0 [--all|--gnome|--theme|--extensions|--fonts|--terminal|--spotlight|--apps|--tweaks|--cachyos]"; exit 1 ;;
 esac
