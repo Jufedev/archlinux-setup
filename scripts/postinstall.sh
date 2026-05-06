@@ -333,6 +333,45 @@ install_wallpapers() {
     fi
 }
 
+_gdm_patch_a11y() {
+    local gresource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
+    local workdir
+    workdir=$(mktemp -d)
+
+    # Extraer todos los recursos del gresource instalado
+    while IFS= read -r resource; do
+        local rel="${resource#/org/gnome/shell/theme/}"
+        mkdir -p "$workdir/$(dirname "$rel")"
+        gresource extract "$gresource" "$resource" > "$workdir/$rel" 2>/dev/null || true
+    done < <(gresource list "$gresource")
+
+    # Parchear TODOS los CSS encontrados — cubre aliases (gdm.css, gdm3.css, Yaru/)
+    while IFS= read -r css; do
+        printf '\n#AccessibilityButton { display: none !important; }\n' >> "$css"
+    done < <(find "$workdir" -name "*.css")
+
+    # Reconstruir el gresource.xml a partir de los recursos extraídos
+    local xml="$workdir/patch.gresource.xml"
+    {
+        echo '<?xml version="1.0" encoding="UTF-8"?>'
+        echo '<gresources>'
+        echo '  <gresource prefix="/org/gnome/shell/theme">'
+        while IFS= read -r resource; do
+            echo "    <file>${resource#/org/gnome/shell/theme/}</file>"
+        done < <(gresource list "$gresource")
+        echo '  </gresource>'
+        echo '</gresources>'
+    } > "$xml"
+
+    # Recompilar y reemplazar
+    (cd "$workdir" && sudo glib-compile-resources patch.gresource.xml \
+        --sourcedir="$workdir" \
+        --target="$gresource") 2>&1 | tee -a "$LOG_FILE"
+
+    rm -rf "$workdir"
+    ok "Botón de accesibilidad oculto del login"
+}
+
 apply_gdm() {
     step "Login — GDM estilo macOS (solo botón de apagado)"
 
@@ -342,12 +381,6 @@ apply_gdm() {
     info "Clonando WhiteSur-gtk-theme..."
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | tee -a "$LOG_FILE"
-
-    # Ocultar el botón de accesibilidad — parchear los SCSS de entrada
-    # antes de que tweaks.sh los compile al gresource
-    local hide_a11y="#AccessibilityButton { display: none !important; }"
-    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Light.scss"
-    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Dark.scss"
 
     # Usar la imagen Ventura como fondo del GDM si está disponible
     local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
@@ -362,9 +395,11 @@ apply_gdm() {
 
     rm -rf "$tmpdir"
 
+    info "Parcheando gresource para ocultar el botón de accesibilidad..."
+    _gdm_patch_a11y
+
     ok "GDM configurado — login estilo macOS, solo el ⚙ de apagado visible"
-    warn "Reiniciá GDM para ver los cambios: sudo systemctl restart gdm"
-    info "  (o reiniciá el sistema para aplicar todo de una vez)"
+    warn "Corré: sudo systemctl restart gdm"
 }
 
 install_cachyos_repos() {

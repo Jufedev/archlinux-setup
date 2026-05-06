@@ -64,17 +64,48 @@ refresh_dock() {
 }
 
 # ── GDM (lento, requiere sudo) ────────────────────────────────────────────
+_gdm_patch_a11y() {
+    local gresource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
+    local workdir
+    workdir=$(mktemp -d)
+
+    while IFS= read -r resource; do
+        local rel="${resource#/org/gnome/shell/theme/}"
+        mkdir -p "$workdir/$(dirname "$rel")"
+        gresource extract "$gresource" "$resource" > "$workdir/$rel" 2>/dev/null || true
+    done < <(gresource list "$gresource")
+
+    while IFS= read -r css; do
+        printf '\n#AccessibilityButton { display: none !important; }\n' >> "$css"
+    done < <(find "$workdir" -name "*.css")
+
+    local xml="$workdir/patch.gresource.xml"
+    {
+        echo '<?xml version="1.0" encoding="UTF-8"?>'
+        echo '<gresources>'
+        echo '  <gresource prefix="/org/gnome/shell/theme">'
+        while IFS= read -r resource; do
+            echo "    <file>${resource#/org/gnome/shell/theme/}</file>"
+        done < <(gresource list "$gresource")
+        echo '  </gresource>'
+        echo '</gresources>'
+    } > "$xml"
+
+    (cd "$workdir" && sudo glib-compile-resources patch.gresource.xml \
+        --sourcedir="$workdir" \
+        --target="$gresource")
+
+    rm -rf "$workdir"
+    ok "Botón de accesibilidad oculto del login"
+}
+
 refresh_gdm() {
-    warn "El refresh de GDM re-aplica el tema completo — puede tardar 1-2 min"
+    warn "Re-aplicando tema GDM — puede tardar 1-2 min"
     local tmpdir
     tmpdir=$(mktemp -d)
 
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | grep -E "Cloning|done\."
-
-    local hide_a11y="#AccessibilityButton { display: none !important; }"
-    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Light.scss"
-    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Dark.scss"
 
     local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
     local gdm_bg_flag="-b default"
@@ -86,8 +117,11 @@ refresh_gdm() {
     (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag)
     rm -rf "$tmpdir"
 
+    info "Parcheando gresource para ocultar el botón de accesibilidad..."
+    _gdm_patch_a11y
+
     ok "GDM actualizado"
-    warn "Corré 'sudo systemctl restart gdm' para aplicar (cierra la sesión actual)"
+    warn "Corré: sudo systemctl restart gdm"
 }
 
 # ── Todo (sin GDM) ────────────────────────────────────────────────────────
