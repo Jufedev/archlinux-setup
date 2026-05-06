@@ -34,6 +34,7 @@ refresh_dconf() {
         warn "dconf no disponible — ejecutá esto desde una sesión GNOME"
         return
     fi
+    gsettings set org.gnome.shell disable-extension-version-validation true
     info "Aplicando gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
     ok "dconf aplicado"

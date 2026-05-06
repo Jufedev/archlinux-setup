@@ -296,6 +296,9 @@ apply_tweaks() {
         return
     fi
 
+    info "Desactivando validación de versión de extensiones (necesario para extensiones custom)..."
+    gsettings set org.gnome.shell disable-extension-version-validation true
+
     info "Cargando configuración GNOME desde gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
