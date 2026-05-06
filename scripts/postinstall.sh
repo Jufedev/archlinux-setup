@@ -320,8 +320,17 @@ install_wallpapers() {
 
     rm -rf "$tmpdir"
 
-    ok "Wallpapers dinámicos instalados (Ventura, Monterey, WhiteSur, Nord)"
-    info "Andá a Configuración → Fondo de pantalla y seleccioná un wallpaper WhiteSur para activar el cambio automático por hora"
+    # Activar el wallpaper dinámico Ventura automáticamente
+    local ventura_xml="$HOME/.local/share/backgrounds/Ventura/Ventura-timed.xml"
+    if [[ -f "$ventura_xml" ]]; then
+        gsettings set org.gnome.desktop.background picture-uri "file://${ventura_xml}"
+        gsettings set org.gnome.desktop.background picture-uri-dark "file://${ventura_xml}"
+        gsettings set org.gnome.desktop.background picture-options "zoom"
+        ok "Wallpaper dinámico Ventura activado — cambia automáticamente con la hora"
+    else
+        ok "Wallpapers instalados"
+        warn "Seleccioná un wallpaper WhiteSur en Configuración → Fondo de pantalla"
+    fi
 }
 
 apply_gdm() {
@@ -334,13 +343,22 @@ apply_gdm() {
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | tee -a "$LOG_FILE"
 
-    # Ocultar el botón de accesibilidad antes de compilar el tema
-    # El engranaje de apagado/reinicio queda como único control visible
-    echo "#AccessibilityButton { display: none !important; }" \
-        >> "${tmpdir}/src/main/gnome-shell/_shell-base.scss"
+    # Ocultar el botón de accesibilidad — parchear los SCSS de entrada
+    # antes de que tweaks.sh los compile al gresource
+    local hide_a11y="#AccessibilityButton { display: none !important; }"
+    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Light.scss"
+    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Dark.scss"
+
+    # Usar la imagen Ventura como fondo del GDM si está disponible
+    local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
+    local gdm_bg_flag="-b default"
+    if [[ -f "$ventura_img" ]]; then
+        gdm_bg_flag="-b ${ventura_img}"
+    fi
 
     info "Aplicando tema WhiteSur a GDM (requiere sudo)..."
-    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd -b default) 2>&1 | tee -a "$LOG_FILE"
+    # shellcheck disable=SC2086
+    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag) 2>&1 | tee -a "$LOG_FILE"
 
     rm -rf "$tmpdir"
 

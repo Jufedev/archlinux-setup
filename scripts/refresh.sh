@@ -72,10 +72,18 @@ refresh_gdm() {
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | grep -E "Cloning|done\."
 
-    echo "#AccessibilityButton { display: none !important; }" \
-        >> "${tmpdir}/src/main/gnome-shell/_shell-base.scss"
+    local hide_a11y="#AccessibilityButton { display: none !important; }"
+    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Light.scss"
+    echo "$hide_a11y" >> "${tmpdir}/src/main/gnome-shell/gnome-shell-Dark.scss"
 
-    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd -b default)
+    local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
+    local gdm_bg_flag="-b default"
+    if [[ -f "$ventura_img" ]]; then
+        gdm_bg_flag="-b ${ventura_img}"
+    fi
+
+    # shellcheck disable=SC2086
+    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag)
     rm -rf "$tmpdir"
 
     ok "GDM actualizado"
@@ -83,21 +91,35 @@ refresh_gdm() {
 }
 
 # ── Todo (sin GDM) ────────────────────────────────────────────────────────
+refresh_wallpaper() {
+    local ventura_xml="$HOME/.local/share/backgrounds/Ventura/Ventura-timed.xml"
+    if [[ ! -f "$ventura_xml" ]]; then
+        warn "Wallpapers no instalados — corré: bash scripts/postinstall.sh --wallpapers"
+        return
+    fi
+    gsettings set org.gnome.desktop.background picture-uri "file://${ventura_xml}"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://${ventura_xml}"
+    gsettings set org.gnome.desktop.background picture-options "zoom"
+    ok "Wallpaper dinámico Ventura activado"
+}
+
 refresh_all() {
     refresh_configs
     refresh_dconf
     refresh_dock
+    refresh_wallpaper
     echo ""
-    ok "Refresh completo — configs, dconf y dock-magnify actualizados"
+    ok "Refresh completo — configs, dconf, dock-magnify y wallpaper actualizados"
     info "Para actualizar el GDM corré: bash scripts/refresh.sh --gdm"
 }
 
 # ── CLI ───────────────────────────────────────────────────────────────────
 case "${1:-}" in
-    --configs) refresh_configs ;;
-    --dconf)   refresh_dconf ;;
-    --dock)    refresh_dock ;;
-    --gdm)     refresh_gdm ;;
-    --all|"")  refresh_all ;;
+    --configs)   refresh_configs ;;
+    --dconf)     refresh_dconf ;;
+    --dock)      refresh_dock ;;
+    --wallpaper) refresh_wallpaper ;;
+    --gdm)       refresh_gdm ;;
+    --all|"")    refresh_all ;;
     *) echo "Uso: $0 [--all | --configs | --dconf | --dock | --gdm]"; exit 1 ;;
 esac
