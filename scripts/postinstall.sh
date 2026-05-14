@@ -288,6 +288,19 @@ install_apps() {
     ok "Apps, seguridad y entorno de desarrollo listos"
 }
 
+_install_app_grid_icon() {
+    local icon_src="${CONFIGS_DIR}/gnome/icons/view-app-grid-symbolic.svg"
+    [[ ! -f "$icon_src" ]] && return
+
+    for dir in /usr/share/icons/WhiteSur /usr/share/icons/WhiteSur-dark; do
+        if [[ -d "$dir/scalable/actions" ]]; then
+            sudo cp "$icon_src" "$dir/scalable/actions/view-app-grid-symbolic.svg"
+            sudo gtk-update-icon-cache -f "$dir" 2>/dev/null || true
+        fi
+    done
+    ok "Icono de app grid (9 puntos) instalado"
+}
+
 apply_tweaks() {
     step "8/8 — Configuración GNOME (dconf)"
 
@@ -301,6 +314,8 @@ apply_tweaks() {
 
     info "Cargando configuración GNOME desde gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
+
+    _install_app_grid_icon
 
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }

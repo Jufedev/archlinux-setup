@@ -38,6 +38,17 @@ refresh_dconf() {
     info "Aplicando gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
     ok "dconf aplicado"
+
+    local icon_src="${CONFIGS_DIR}/gnome/icons/view-app-grid-symbolic.svg"
+    if [[ -f "$icon_src" ]]; then
+        for dir in /usr/share/icons/WhiteSur /usr/share/icons/WhiteSur-dark; do
+            if [[ -d "$dir/scalable/actions" ]]; then
+                sudo cp "$icon_src" "$dir/scalable/actions/view-app-grid-symbolic.svg"
+                sudo gtk-update-icon-cache -f "$dir" 2>/dev/null || true
+            fi
+        done
+        ok "Icono de app grid (9 puntos) actualizado"
+    fi
 }
 
 # ── Extensión dock-magnify ────────────────────────────────────────────────

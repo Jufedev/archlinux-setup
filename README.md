@@ -18,7 +18,8 @@ archlinux-setup/
 │   ├── starship/starship.toml  # Prompt minimalista con iconos
 │   └── gnome/
 │       ├── gnome-macos.dconf   # Configuración GNOME completa
-│       └── dock-magnify/       # Extensión custom: fish-eye en el dock
+│       ├── dock-magnify/       # Extensión custom: fish-eye en el dock
+│       └── icons/              # Íconos custom (app grid 9 puntos)
 └── README.md
 ```
 
