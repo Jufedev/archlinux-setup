@@ -1,6 +1,6 @@
 # Skill Registry — archlinux-setup
 
-Generated: 2026-05-03
+Generated: 2026-05-14
 
 ## User Skills
 
@@ -27,6 +27,12 @@ Generated: 2026-05-03
 - Configs stored in `configs/` and copied to `~/.config/` at install time
 - Scripts support both CLI flags (`--all`, `--gnome`, etc.) and interactive menu
 - Use `bat/rg/fd/sd/eza` instead of `cat/grep/find/sed/ls`
+
+### GNOME Extension (dock-magnify)
+- JavaScript/GJS with GNOME Shell imports (Clutter, GLib, Graphene)
+- Extension class extends `Extension` from `resource:///org/gnome/shell/extensions/extension.js`
+- Shell-version range: 45-50
+- Follows GNOME extension conventions: `metadata.json`, `extension.js`, `stylesheet.css`
 
 ### judgment-day
 - Launch 2 independent blind judge sub-agents in parallel

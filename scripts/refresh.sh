@@ -64,7 +64,7 @@ refresh_dock() {
 }
 
 # ── GDM (lento, requiere sudo) ────────────────────────────────────────────
-_gdm_patch_a11y() {
+_gdm_patch_css() {
     local gresource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
     local workdir
     workdir=$(mktemp -d)
@@ -75,8 +75,17 @@ _gdm_patch_a11y() {
         gresource extract "$gresource" "$resource" > "$workdir/$rel" 2>/dev/null || true
     done < <(gresource list "$gresource")
 
+    local css_patch
+    css_patch=$(cat <<'CSSPATCH'
+
+#panel { display: none !important; }
+.login-dialog-logo-bin { display: none !important; }
+.user-icon { display: none !important; }
+#AccessibilityButton { display: none !important; }
+CSSPATCH
+)
     while IFS= read -r css; do
-        printf '\n#AccessibilityButton { display: none !important; }\n' >> "$css"
+        printf '%s\n' "$css_patch" >> "$css"
     done < <(find "$workdir" -name "*.css")
 
     local xml="$workdir/patch.gresource.xml"
@@ -96,7 +105,7 @@ _gdm_patch_a11y() {
         --target="$gresource")
 
     rm -rf "$workdir"
-    ok "Botón de accesibilidad oculto del login"
+    ok "GDM parcheado (panel, logo, avatar, accesibilidad ocultos)"
 }
 
 refresh_gdm() {
@@ -117,8 +126,8 @@ refresh_gdm() {
     (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag)
     rm -rf "$tmpdir"
 
-    info "Parcheando gresource para ocultar el botón de accesibilidad..."
-    _gdm_patch_a11y
+    info "Parcheando gresource (panel, logo, avatar, accesibilidad)..."
+    _gdm_patch_css
 
     ok "GDM actualizado"
     warn "Corré: sudo systemctl restart gdm"

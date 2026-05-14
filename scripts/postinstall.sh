@@ -333,7 +333,7 @@ install_wallpapers() {
     fi
 }
 
-_gdm_patch_a11y() {
+_gdm_patch_css() {
     local gresource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
     local workdir
     workdir=$(mktemp -d)
@@ -345,9 +345,17 @@ _gdm_patch_a11y() {
         gresource extract "$gresource" "$resource" > "$workdir/$rel" 2>/dev/null || true
     done < <(gresource list "$gresource")
 
-    # Parchear TODOS los CSS encontrados — cubre aliases (gdm.css, gdm3.css, Yaru/)
+    local css_patch
+    css_patch=$(cat <<'CSSPATCH'
+
+#panel { display: none !important; }
+.login-dialog-logo-bin { display: none !important; }
+.user-icon { display: none !important; }
+#AccessibilityButton { display: none !important; }
+CSSPATCH
+)
     while IFS= read -r css; do
-        printf '\n#AccessibilityButton { display: none !important; }\n' >> "$css"
+        printf '%s\n' "$css_patch" >> "$css"
     done < <(find "$workdir" -name "*.css")
 
     # Reconstruir el gresource.xml a partir de los recursos extraídos
@@ -369,7 +377,7 @@ _gdm_patch_a11y() {
         --target="$gresource") 2>&1 | tee -a "$LOG_FILE"
 
     rm -rf "$workdir"
-    ok "Botón de accesibilidad oculto del login"
+    ok "GDM parcheado (panel, logo, avatar, accesibilidad ocultos)"
 }
 
 apply_gdm() {
@@ -395,8 +403,8 @@ apply_gdm() {
 
     rm -rf "$tmpdir"
 
-    info "Parcheando gresource para ocultar el botón de accesibilidad..."
-    _gdm_patch_a11y
+    info "Parcheando gresource (panel, logo, avatar, accesibilidad)..."
+    _gdm_patch_css
 
     ok "GDM configurado — login estilo macOS, solo el ⚙ de apagado visible"
     warn "Corré: sudo systemctl restart gdm"
