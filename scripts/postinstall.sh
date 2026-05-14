@@ -384,6 +384,9 @@ _gdm_patch_css() {
   padding: 0 !important;
   opacity: 0 !important;
 }
+#lockDialogGroup {
+  background-image: url("file:///usr/share/backgrounds/gdm-current.jpg") !important;
+}
 CSSPATCH
 )
     while IFS= read -r css; do
@@ -409,11 +412,122 @@ CSSPATCH
         --target="$gresource") 2>&1 | tee -a "$LOG_FILE"
 
     rm -rf "$workdir"
-    ok "GDM parcheado (panel, logo, avatar, accesibilidad ocultos)"
+    ok "GDM parcheado (panel, logo, avatar, botones, fondo dinámico)"
+}
+
+_lock_screen_patch_css() {
+    local theme_css=""
+    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
+            theme_css="$dir/gnome-shell/gnome-shell.css"
+            break
+        fi
+    done
+
+    if [[ -z "$theme_css" ]]; then
+        warn "WhiteSur-Light gnome-shell.css no encontrado — lock screen sin parchear"
+        return
+    fi
+
+    if grep -q 'archlinux-setup-lock-patch' "$theme_css" 2>/dev/null; then
+        ok "Lock screen CSS ya parcheado"
+        return
+    fi
+
+    info "Parcheando lock screen: $theme_css"
+    local patch
+    patch=$(cat <<'CSSPATCH'
+
+/* archlinux-setup-lock-patch */
+.unlock-dialog .user-widget .user-icon,
+.unlock-dialog .user-widget.vertical .user-icon {
+  icon-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  background-color: transparent !important;
+}
+.unlock-dialog .user-widget.vertical .user-icon StIcon {
+  icon-size: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+.unlock-dialog .cancel-button,
+.unlock-dialog .switch-user-button,
+.unlock-dialog .login-dialog-session-list-button {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+CSSPATCH
+)
+    if [[ "$theme_css" == /usr/share/* ]]; then
+        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
+    else
+        printf '%s\n' "$patch" >> "$theme_css"
+    fi
+    ok "Lock screen CSS parcheado — consistente con GDM"
+}
+
+_gdm_ensure_wallpapers() {
+    local sys_dir="/usr/share/backgrounds/Ventura"
+    local user_dir="$HOME/.local/share/backgrounds/Ventura"
+
+    if [[ -f "$sys_dir/Ventura-light.jpg" && -f "$sys_dir/Ventura-dark.jpg" ]]; then
+        return
+    fi
+
+    if [[ -d "$user_dir" ]]; then
+        info "Copiando wallpapers Ventura a ubicación del sistema..."
+        sudo mkdir -p "$sys_dir"
+        sudo cp "$user_dir"/*.jpg "$sys_dir/" 2>/dev/null || true
+        [[ -f "$user_dir/Ventura-timed.xml" ]] && sudo cp "$user_dir/Ventura-timed.xml" "$sys_dir/"
+        ok "Wallpapers copiados a $sys_dir"
+    else
+        warn "Wallpapers Ventura no encontrados — corré --wallpapers primero"
+    fi
+}
+
+_gdm_setup_dynamic_wallpaper() {
+    info "Instalando servicio de wallpaper dinámico..."
+
+    sudo install -m 755 "${SCRIPT_DIR}/gdm-wallpaper-update.sh" /usr/local/bin/gdm-wallpaper-update
+
+    sudo tee /etc/systemd/system/gdm-wallpaper.service > /dev/null <<'UNIT'
+[Unit]
+Description=Update GDM wallpaper based on time of day
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/gdm-wallpaper-update
+UNIT
+
+    sudo tee /etc/systemd/system/gdm-wallpaper.timer > /dev/null <<'UNIT'
+[Unit]
+Description=Update GDM wallpaper hourly
+
+[Timer]
+OnBootSec=0
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+UNIT
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now gdm-wallpaper.timer 2>&1 | tee -a "$LOG_FILE"
+    sudo /usr/local/bin/gdm-wallpaper-update
+    ok "Wallpaper dinámico configurado (actualiza al bootear y cada hora)"
 }
 
 apply_gdm() {
-    step "Login — GDM estilo macOS (solo botón de apagado)"
+    step "Login — GDM estilo macOS con wallpaper dinámico"
+
+    _gdm_ensure_wallpapers
 
     local tmpdir
     tmpdir=$(mktemp -d)
@@ -422,23 +536,19 @@ apply_gdm() {
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | tee -a "$LOG_FILE"
 
-    # Usar la imagen Ventura como fondo del GDM si está disponible
-    local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
-    local gdm_bg_flag="-b default"
-    if [[ -f "$ventura_img" ]]; then
-        gdm_bg_flag="-b ${ventura_img}"
-    fi
-
     info "Aplicando tema WhiteSur a GDM (requiere sudo)..."
-    # shellcheck disable=SC2086
-    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag) 2>&1 | tee -a "$LOG_FILE"
+    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd -b default) 2>&1 | tee -a "$LOG_FILE"
 
     rm -rf "$tmpdir"
 
-    info "Parcheando gresource (panel, logo, avatar, accesibilidad)..."
+    _gdm_setup_dynamic_wallpaper
+
+    info "Parcheando gresource (panel, logo, avatar, botones, fondo dinámico)..."
     _gdm_patch_css
 
-    ok "GDM configurado — login estilo macOS, solo el ⚙ de apagado visible"
+    _lock_screen_patch_css
+
+    ok "GDM configurado — login limpio con wallpaper dinámico"
     warn "Corré: sudo systemctl restart gdm"
 }
 

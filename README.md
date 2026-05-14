@@ -110,17 +110,18 @@ O usar flags directamente:
 
 ## Paso 3 — Login GDM estilo macOS (opcional)
 
-Aplica el tema WhiteSur al login screen con una configuración limpia: **solo el ⚙ de apagado/reinicio visible**, sin el botón de accesibilidad.
+Aplica el tema WhiteSur al login screen con una configuración minimalista: solo el nombre de usuario y el campo de contraseña sobre el wallpaper dinámico Ventura (cambia según la hora).
 
 ```bash
 bash scripts/postinstall.sh --gdm
 ```
 
 **Qué hace internamente:**
-1. Clona WhiteSur-gtk-theme
-2. Inyecta CSS para ocultar el botón de accesibilidad (`#AccessibilityButton`) antes de compilar el tema
-3. Corre `tweaks.sh -g` con el wallpaper por defecto de WhiteSur (gradiente macOS)
-4. El resultado: pantalla de login minimalista con fondo degradado y solo el control de energía
+1. Copia wallpapers Ventura a `/usr/share/backgrounds/` (si no están)
+2. Clona WhiteSur-gtk-theme y aplica el tema a GDM
+3. Instala un servicio systemd que actualiza el wallpaper según la hora (light 7AM–7PM, dark el resto)
+4. Parchea el CSS del gresource: oculta panel superior, logo Arch, avatar, botones de accesibilidad/sesión
+5. Parchea el tema WhiteSur del lock screen para que sea consistente con el login
 
 ```bash
 # Para aplicar los cambios sin reiniciar

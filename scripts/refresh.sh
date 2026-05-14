@@ -114,6 +114,9 @@ _gdm_patch_css() {
   padding: 0 !important;
   opacity: 0 !important;
 }
+#lockDialogGroup {
+  background-image: url("file:///usr/share/backgrounds/gdm-current.jpg") !important;
+}
 CSSPATCH
 )
     while IFS= read -r css; do
@@ -137,7 +140,65 @@ CSSPATCH
         --target="$gresource")
 
     rm -rf "$workdir"
-    ok "GDM parcheado (panel, logo, avatar, accesibilidad ocultos)"
+    ok "GDM parcheado (panel, logo, avatar, botones, fondo dinámico)"
+}
+
+_lock_screen_patch_css() {
+    local theme_css=""
+    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
+            theme_css="$dir/gnome-shell/gnome-shell.css"
+            break
+        fi
+    done
+
+    if [[ -z "$theme_css" ]]; then
+        warn "WhiteSur-Light gnome-shell.css no encontrado — lock screen sin parchear"
+        return
+    fi
+
+    if grep -q 'archlinux-setup-lock-patch' "$theme_css" 2>/dev/null; then
+        ok "Lock screen CSS ya parcheado"
+        return
+    fi
+
+    info "Parcheando lock screen: $theme_css"
+    local patch
+    patch=$(cat <<'CSSPATCH'
+
+/* archlinux-setup-lock-patch */
+.unlock-dialog .user-widget .user-icon,
+.unlock-dialog .user-widget.vertical .user-icon {
+  icon-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  background-color: transparent !important;
+}
+.unlock-dialog .user-widget.vertical .user-icon StIcon {
+  icon-size: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+.unlock-dialog .cancel-button,
+.unlock-dialog .switch-user-button,
+.unlock-dialog .login-dialog-session-list-button {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+CSSPATCH
+)
+    if [[ "$theme_css" == /usr/share/* ]]; then
+        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
+    else
+        printf '%s\n' "$patch" >> "$theme_css"
+    fi
+    ok "Lock screen CSS parcheado — consistente con GDM"
 }
 
 refresh_gdm() {
@@ -148,18 +209,15 @@ refresh_gdm() {
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$tmpdir" \
         2>&1 | grep -E "Cloning|done\."
 
-    local ventura_img="/usr/share/backgrounds/Ventura/Ventura-light.jpg"
-    local gdm_bg_flag="-b default"
-    if [[ -f "$ventura_img" ]]; then
-        gdm_bg_flag="-b ${ventura_img}"
-    fi
-
-    # shellcheck disable=SC2086
-    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd $gdm_bg_flag)
+    (cd "$tmpdir" && sudo ./tweaks.sh -g -nd -b default)
     rm -rf "$tmpdir"
 
-    info "Parcheando gresource (panel, logo, avatar, accesibilidad)..."
+    sudo /usr/local/bin/gdm-wallpaper-update 2>/dev/null || warn "gdm-wallpaper-update no instalado — corré postinstall.sh --gdm"
+
+    info "Parcheando gresource (panel, logo, avatar, botones, fondo dinámico)..."
     _gdm_patch_css
+
+    _lock_screen_patch_css
 
     ok "GDM actualizado"
     warn "Corré: sudo systemctl restart gdm"
