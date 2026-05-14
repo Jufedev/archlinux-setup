@@ -57,7 +57,7 @@ blur=true
 
 [org/gnome/shell/extensions/blur-my-shell/overview]
 blur=true
-style-components=2
+style-components=0
 
 [org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
 blur=true

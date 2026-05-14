@@ -41,13 +41,31 @@ refresh_dconf() {
 
     local icon_src="${CONFIGS_DIR}/gnome/icons/view-app-grid-symbolic.svg"
     if [[ -f "$icon_src" ]]; then
-        for dir in /usr/share/icons/WhiteSur /usr/share/icons/WhiteSur-dark; do
-            if [[ -d "$dir/scalable/actions" ]]; then
-                sudo cp "$icon_src" "$dir/scalable/actions/view-app-grid-symbolic.svg"
-                sudo gtk-update-icon-cache -f "$dir" 2>/dev/null || true
-            fi
+        local found=false
+        for theme_dir in /usr/share/icons/WhiteSur /usr/share/icons/WhiteSur-dark; do
+            [[ ! -d "$theme_dir" ]] && continue
+
+            while IFS= read -r existing; do
+                sudo rm -f "$existing"
+                sudo cp "$icon_src" "$existing"
+                found=true
+            done < <(find "$theme_dir" -name "view-app-grid-symbolic*" \( -type f -o -type l \) 2>/dev/null)
+
+            for subdir in scalable/actions symbolic/actions; do
+                if [[ -d "$theme_dir/$subdir" ]]; then
+                    sudo cp "$icon_src" "$theme_dir/$subdir/view-app-grid-symbolic.svg"
+                    found=true
+                fi
+            done
+
+            sudo gtk-update-icon-cache -f "$theme_dir" 2>/dev/null || true
         done
-        ok "Icono de app grid (9 puntos) actualizado"
+
+        if $found; then
+            ok "Icono de app grid (9 puntos) actualizado"
+        else
+            warn "Tema de iconos WhiteSur no encontrado en /usr/share/icons/"
+        fi
     fi
 }
 
