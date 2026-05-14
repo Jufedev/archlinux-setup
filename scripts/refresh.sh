@@ -78,10 +78,31 @@ _gdm_patch_css() {
     local css_patch
     css_patch=$(cat <<'CSSPATCH'
 
-#panel { display: none !important; }
-.login-dialog-logo-bin { display: none !important; }
-.user-icon { display: none !important; }
-#AccessibilityButton { display: none !important; }
+#panel {
+  height: 0 !important;
+  background-color: transparent !important;
+}
+.login-dialog-logo-bin {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+.user-icon {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+#AccessibilityButton {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
 CSSPATCH
 )
     while IFS= read -r css; do
