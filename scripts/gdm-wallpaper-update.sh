@@ -9,9 +9,9 @@ SYMLINK="/usr/share/backgrounds/gdm-current.jpg"
 hour=$(date +%-H)
 
 if (( hour >= 7 && hour < 19 )); then
-  src="${WALLPAPER_DIR}/Ventura-light.jpg"
+  src="${WALLPAPER_DIR}/Ventura-light-blur.jpg"
 else
-  src="${WALLPAPER_DIR}/Ventura-dark.jpg"
+  src="${WALLPAPER_DIR}/Ventura-dark-blur.jpg"
 fi
 
 [[ -f "$src" ]] && ln -sf "$src" "$SYMLINK"

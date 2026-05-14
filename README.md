@@ -118,10 +118,11 @@ bash scripts/postinstall.sh --gdm
 
 **Qué hace internamente:**
 1. Copia wallpapers Ventura a `/usr/share/backgrounds/` (si no están)
-2. Clona WhiteSur-gtk-theme y aplica el tema a GDM
-3. Instala un servicio systemd que actualiza el wallpaper según la hora (light 7AM–7PM, dark el resto)
-4. Parchea el CSS del gresource: oculta panel superior, logo Arch, avatar, botones de accesibilidad/sesión
-5. Parchea el tema WhiteSur del lock screen para que sea consistente con el login
+2. Genera versiones con blur de los wallpapers via ImageMagick (efecto difuminado estilo macOS)
+3. Clona WhiteSur-gtk-theme y aplica el tema a GDM
+4. Instala un servicio systemd que actualiza el wallpaper según la hora (light 7AM–7PM, dark el resto)
+5. Parchea el CSS del gresource: oculta panel superior, logo Arch, avatar, botones de accesibilidad/sesión
+6. Parchea el tema WhiteSur del lock screen para que sea consistente con el login
 
 ```bash
 # Para aplicar los cambios sin reiniciar

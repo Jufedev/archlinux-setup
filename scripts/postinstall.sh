@@ -473,23 +473,50 @@ CSSPATCH
     ok "Lock screen CSS parcheado — consistente con GDM"
 }
 
+_gdm_generate_blur() {
+    local dir="$1"
+
+    if [[ -f "$dir/Ventura-light-blur.jpg" && -f "$dir/Ventura-dark-blur.jpg" ]]; then
+        return
+    fi
+
+    if ! command -v magick &>/dev/null && ! command -v convert &>/dev/null; then
+        info "Instalando imagemagick para efecto blur..."
+        sudo pacman -S --noconfirm imagemagick 2>&1 | tee -a "$LOG_FILE"
+    fi
+
+    local blur_cmd="magick"
+    command -v magick &>/dev/null || blur_cmd="convert"
+
+    for variant in light dark; do
+        local src="$dir/Ventura-${variant}.jpg"
+        local dst="$dir/Ventura-${variant}-blur.jpg"
+        if [[ -f "$src" && ! -f "$dst" ]]; then
+            info "Generando blur: Ventura-${variant}-blur.jpg..."
+            sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+            ok "Ventura-${variant}-blur.jpg"
+        fi
+    done
+}
+
 _gdm_ensure_wallpapers() {
     local sys_dir="/usr/share/backgrounds/Ventura"
     local user_dir="$HOME/.local/share/backgrounds/Ventura"
 
-    if [[ -f "$sys_dir/Ventura-light.jpg" && -f "$sys_dir/Ventura-dark.jpg" ]]; then
-        return
+    if [[ ! -f "$sys_dir/Ventura-light.jpg" || ! -f "$sys_dir/Ventura-dark.jpg" ]]; then
+        if [[ -d "$user_dir" ]]; then
+            info "Copiando wallpapers Ventura a ubicación del sistema..."
+            sudo mkdir -p "$sys_dir"
+            sudo cp "$user_dir"/*.jpg "$sys_dir/" 2>/dev/null || true
+            [[ -f "$user_dir/Ventura-timed.xml" ]] && sudo cp "$user_dir/Ventura-timed.xml" "$sys_dir/"
+            ok "Wallpapers copiados a $sys_dir"
+        else
+            warn "Wallpapers Ventura no encontrados — corré --wallpapers primero"
+            return
+        fi
     fi
 
-    if [[ -d "$user_dir" ]]; then
-        info "Copiando wallpapers Ventura a ubicación del sistema..."
-        sudo mkdir -p "$sys_dir"
-        sudo cp "$user_dir"/*.jpg "$sys_dir/" 2>/dev/null || true
-        [[ -f "$user_dir/Ventura-timed.xml" ]] && sudo cp "$user_dir/Ventura-timed.xml" "$sys_dir/"
-        ok "Wallpapers copiados a $sys_dir"
-    else
-        warn "Wallpapers Ventura no encontrados — corré --wallpapers primero"
-    fi
+    _gdm_generate_blur "$sys_dir"
 }
 
 _gdm_setup_dynamic_wallpaper() {

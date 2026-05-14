@@ -201,8 +201,37 @@ CSSPATCH
     ok "Lock screen CSS parcheado — consistente con GDM"
 }
 
+_gdm_generate_blur() {
+    local dir="$1"
+
+    if [[ -f "$dir/Ventura-light-blur.jpg" && -f "$dir/Ventura-dark-blur.jpg" ]]; then
+        return
+    fi
+
+    if ! command -v magick &>/dev/null && ! command -v convert &>/dev/null; then
+        info "Instalando imagemagick para efecto blur..."
+        sudo pacman -S --noconfirm imagemagick
+    fi
+
+    local blur_cmd="magick"
+    command -v magick &>/dev/null || blur_cmd="convert"
+
+    for variant in light dark; do
+        local src="$dir/Ventura-${variant}.jpg"
+        local dst="$dir/Ventura-${variant}-blur.jpg"
+        if [[ -f "$src" && ! -f "$dst" ]]; then
+            info "Generando blur: Ventura-${variant}-blur.jpg..."
+            sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+            ok "Ventura-${variant}-blur.jpg"
+        fi
+    done
+}
+
 refresh_gdm() {
     warn "Re-aplicando tema GDM — puede tardar 1-2 min"
+
+    _gdm_generate_blur "/usr/share/backgrounds/Ventura"
+
     local tmpdir
     tmpdir=$(mktemp -d)
 
