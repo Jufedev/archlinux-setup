@@ -86,17 +86,28 @@ _gdm_patch_css() {
   width: 0 !important;
   height: 0 !important;
   margin: 0 !important;
-  padding: 0 !important;
   opacity: 0 !important;
 }
-.user-icon {
+.user-icon,
+.login-dialog .user-widget .user-icon,
+.login-dialog .user-widget.vertical .user-icon {
+  icon-size: 0 !important;
   width: 0 !important;
   height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   opacity: 0 !important;
+  background-color: transparent !important;
 }
-#AccessibilityButton {
+.user-icon StIcon,
+.login-dialog .user-widget.vertical .user-icon StIcon {
+  icon-size: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+.login-dialog-button.a11y-button,
+.login-dialog-button.login-dialog-session-list-button,
+.login-dialog-button.switch-user-button {
   width: 0 !important;
   height: 0 !important;
   margin: 0 !important;
