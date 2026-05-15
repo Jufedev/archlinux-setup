@@ -20,8 +20,7 @@ export default class PanelTweaks extends Extension {
             this._tryArrange();
 
             this._retryCount++;
-            const allDone = this._arranged.clipboard
-                && this._arranged.vitals
+            const allDone = this._arranged.vitals
                 && this._arranged.dateMenu;
 
             if (allDone || this._retryCount >= 10) {
@@ -106,14 +105,6 @@ export default class PanelTweaks extends Extension {
 
     _tryArrange() {
         const center = Main.panel._centerBox;
-
-        if (!this._arranged.clipboard) {
-            const clipboard = this._findIndicator('clipboard');
-            if (clipboard) {
-                this._moveToBox(clipboard, center, 0);
-                this._arranged.clipboard = true;
-            }
-        }
 
         if (!this._arranged.vitals) {
             const vitals = this._findIndicator('vitals');
