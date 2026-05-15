@@ -11,6 +11,7 @@ decoration {
 
 window.background {
     background-color: transparent;
+    border-radius: 22px;
 }
 
 .app {
