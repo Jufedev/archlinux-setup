@@ -1,6 +1,6 @@
 # Skill Registry — archlinux-setup
 
-Generated: 2026-05-14
+Generated: 2026-05-15
 
 ## User Skills
 
@@ -28,11 +28,13 @@ Generated: 2026-05-14
 - Scripts support both CLI flags (`--all`, `--gnome`, etc.) and interactive menu
 - Use `bat/rg/fd/sd/eza` instead of `cat/grep/find/sed/ls`
 
-### GNOME Extension (dock-magnify)
-- JavaScript/GJS with GNOME Shell imports (Clutter, GLib, Graphene)
+### GNOME Extensions (dock-magnify, calendar-tweaks)
+- JavaScript/GJS with GNOME Shell imports (Clutter, GLib, Graphene, Main)
 - Extension class extends `Extension` from `resource:///org/gnome/shell/extensions/extension.js`
 - Shell-version range: 45-50
 - Follows GNOME extension conventions: `metadata.json`, `extension.js`, `stylesheet.css`
+- `dock-magnify`: icon magnification on hover (Clutter animations)
+- `calendar-tweaks`: hides notification list from calendar popup (DOM manipulation)
 
 ### judgment-day
 - Launch 2 independent blind judge sub-agents in parallel
