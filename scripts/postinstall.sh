@@ -391,13 +391,13 @@ install_wallpapers() {
 
     rm -rf "$tmpdir"
 
-    # Activar el wallpaper dinámico Ventura automáticamente
-    local ventura_xml="$HOME/.local/share/backgrounds/Ventura/Ventura-timed.xml"
-    if [[ -f "$ventura_xml" ]]; then
-        gsettings set org.gnome.desktop.background picture-uri "file://${ventura_xml}"
-        gsettings set org.gnome.desktop.background picture-uri-dark "file://${ventura_xml}"
+    # Activar el wallpaper dinámico WhiteSur (Big Sur) automáticamente
+    local whitesur_xml="$HOME/.local/share/backgrounds/WhiteSur/WhiteSur-timed.xml"
+    if [[ -f "$whitesur_xml" ]]; then
+        gsettings set org.gnome.desktop.background picture-uri "file://${whitesur_xml}"
+        gsettings set org.gnome.desktop.background picture-uri-dark "file://${whitesur_xml}"
         gsettings set org.gnome.desktop.background picture-options "zoom"
-        ok "Wallpaper dinámico Ventura activado — cambia automáticamente con la hora"
+        ok "Wallpaper dinámico WhiteSur (Big Sur) activado — cambia automáticamente con la hora"
     else
         ok "Wallpapers instalados"
         warn "Seleccioná un wallpaper WhiteSur en Configuración → Fondo de pantalla"
@@ -547,7 +547,7 @@ CSSPATCH
 _gdm_generate_blur() {
     local dir="$1"
 
-    if [[ -f "$dir/Ventura-light-blur.jpg" && -f "$dir/Ventura-dark-blur.jpg" ]]; then
+    if [[ -f "$dir/WhiteSur-light-blur.jpg" && -f "$dir/WhiteSur-blur.jpg" ]]; then
         return
     fi
 
@@ -559,30 +559,36 @@ _gdm_generate_blur() {
     local blur_cmd="magick"
     command -v magick &>/dev/null || blur_cmd="convert"
 
-    for variant in light dark; do
-        local src="$dir/Ventura-${variant}.jpg"
-        local dst="$dir/Ventura-${variant}-blur.jpg"
-        if [[ -f "$src" && ! -f "$dst" ]]; then
-            info "Generando blur: Ventura-${variant}-blur.jpg..."
-            sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
-            ok "Ventura-${variant}-blur.jpg"
-        fi
-    done
+    # WhiteSur-light.jpg (day) and WhiteSur.jpg (night)
+    local src dst
+    src="$dir/WhiteSur-light.jpg"; dst="$dir/WhiteSur-light-blur.jpg"
+    if [[ -f "$src" && ! -f "$dst" ]]; then
+        info "Generando blur: WhiteSur-light-blur.jpg..."
+        sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+        ok "WhiteSur-light-blur.jpg"
+    fi
+
+    src="$dir/WhiteSur.jpg"; dst="$dir/WhiteSur-blur.jpg"
+    if [[ -f "$src" && ! -f "$dst" ]]; then
+        info "Generando blur: WhiteSur-blur.jpg..."
+        sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+        ok "WhiteSur-blur.jpg"
+    fi
 }
 
 _gdm_ensure_wallpapers() {
-    local sys_dir="/usr/share/backgrounds/Ventura"
-    local user_dir="$HOME/.local/share/backgrounds/Ventura"
+    local sys_dir="/usr/share/backgrounds/WhiteSur"
+    local user_dir="$HOME/.local/share/backgrounds/WhiteSur"
 
-    if [[ ! -f "$sys_dir/Ventura-light.jpg" || ! -f "$sys_dir/Ventura-dark.jpg" ]]; then
+    if [[ ! -f "$sys_dir/WhiteSur-light.jpg" || ! -f "$sys_dir/WhiteSur.jpg" ]]; then
         if [[ -d "$user_dir" ]]; then
-            info "Copiando wallpapers Ventura a ubicación del sistema..."
+            info "Copiando wallpapers WhiteSur a ubicación del sistema..."
             sudo mkdir -p "$sys_dir"
             sudo cp "$user_dir"/*.jpg "$sys_dir/" 2>/dev/null || true
-            [[ -f "$user_dir/Ventura-timed.xml" ]] && sudo cp "$user_dir/Ventura-timed.xml" "$sys_dir/"
+            [[ -f "$user_dir/WhiteSur-timed.xml" ]] && sudo cp "$user_dir/WhiteSur-timed.xml" "$sys_dir/"
             ok "Wallpapers copiados a $sys_dir"
         else
-            warn "Wallpapers Ventura no encontrados — corré --wallpapers primero"
+            warn "Wallpapers WhiteSur no encontrados — corré --wallpapers primero"
             return
         fi
     fi
