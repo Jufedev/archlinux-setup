@@ -37,6 +37,8 @@ refresh_dconf() {
     gsettings set org.gnome.shell disable-extension-version-validation true
     info "Aplicando gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
+    info "Limpiando lista de extensiones desactivadas..."
+    gsettings reset org.gnome.shell disabled-extensions
     ok "dconf aplicado"
 
     local icon_src="${CONFIGS_DIR}/gnome/icons/view-app-grid-symbolic.svg"
@@ -62,7 +64,6 @@ refresh_dconf() {
     fi
 
     _overview_patch_css
-    _calendar_patch_css
 }
 
 _overview_patch_css() {
@@ -109,73 +110,35 @@ CSSPATCH
     ok "Workspace thumbnails ocultos via CSS (compatible con Blur My Shell)"
 }
 
-_calendar_patch_css() {
-    local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
-        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
-            theme_css="$dir/gnome-shell/gnome-shell.css"
-            break
-        fi
-    done
-
-    if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Dark gnome-shell.css no encontrado — calendario sin parchear"
-        return
-    fi
-
-    if grep -q 'archlinux-setup-calendar-patch' "$theme_css" 2>/dev/null; then
-        ok "Calendar CSS ya parcheado"
-        return
-    fi
-
-    info "Parcheando calendario: $theme_css"
-    local patch
-    patch=$(cat <<'CSSPATCH'
-
-/* archlinux-setup-calendar-patch */
-.message-list {
-  min-width: 0 !important;
-  max-width: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  opacity: 0 !important;
-}
-.message-list-placeholder,
-.message-list-sections {
-  min-width: 0 !important;
-  max-width: 0 !important;
-  width: 0 !important;
-  opacity: 0 !important;
-}
-CSSPATCH
-)
-    if [[ "$theme_css" == /usr/share/* ]]; then
-        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
-    else
-        printf '%s\n' "$patch" >> "$theme_css"
-    fi
-    ok "Notificaciones ocultas del menú de calendario"
-}
-
-# ── Extensión dock-magnify ────────────────────────────────────────────────
+# ── Extensiones custom ────────────────────────────────────────────────────
 refresh_dock() {
-    local uuid="dock-magnify@archlinux-setup"
-    local ext_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
+    local uuid ext_dir
 
+    uuid="dock-magnify@archlinux-setup"
+    ext_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
     info "Copiando archivos de dock-magnify..."
     mkdir -p "$ext_dir"
     cp "${CONFIGS_DIR}/gnome/dock-magnify/extension.js"  "$ext_dir/"
     cp "${CONFIGS_DIR}/gnome/dock-magnify/metadata.json" "$ext_dir/"
     cp "${CONFIGS_DIR}/gnome/dock-magnify/stylesheet.css" "$ext_dir/"
-    ok "Archivos copiados"
+    ok "dock-magnify copiado"
+
+    uuid="calendar-tweaks@archlinux-setup"
+    ext_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
+    info "Copiando archivos de calendar-tweaks..."
+    mkdir -p "$ext_dir"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json" "$ext_dir/"
+    ok "calendar-tweaks copiado"
 
     if command -v gnome-extensions &>/dev/null; then
-        info "Recargando extensión..."
-        gnome-extensions disable "$uuid" 2>/dev/null || true
-        sleep 0.3
-        gnome-extensions enable  "$uuid" 2>/dev/null || true
-        ok "dock-magnify recargado"
+        info "Recargando extensiones custom..."
+        for uuid in dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup; do
+            gnome-extensions disable "$uuid" 2>/dev/null || true
+            sleep 0.3
+            gnome-extensions enable  "$uuid" 2>/dev/null || true
+        done
+        ok "Extensiones custom recargadas"
     else
         warn "gnome-extensions no disponible — reiniciá la sesión GNOME para ver los cambios"
     fi

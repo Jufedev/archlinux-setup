@@ -186,6 +186,14 @@ install_extensions() {
     cp "${CONFIGS_DIR}/gnome/dock-magnify/stylesheet.css" "$ext_dir/"
     ok "Extensión dock-magnify instalada"
 
+    # Extensión custom: ocultar notificaciones del calendario
+    info "Instalando extensión calendar-tweaks..."
+    ext_dir="$HOME/.local/share/gnome-shell/extensions/calendar-tweaks@archlinux-setup"
+    mkdir -p "$ext_dir"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json" "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js" "$ext_dir/"
+    ok "Extensión calendar-tweaks instalada"
+
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
 }
 
@@ -356,55 +364,6 @@ CSSPATCH
     ok "Workspace thumbnails ocultos via CSS (compatible con Blur My Shell)"
 }
 
-_calendar_patch_css() {
-    local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
-        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
-            theme_css="$dir/gnome-shell/gnome-shell.css"
-            break
-        fi
-    done
-
-    if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Dark gnome-shell.css no encontrado — calendario sin parchear"
-        return
-    fi
-
-    if grep -q 'archlinux-setup-calendar-patch' "$theme_css" 2>/dev/null; then
-        ok "Calendar CSS ya parcheado"
-        return
-    fi
-
-    info "Parcheando calendario: $theme_css"
-    local patch
-    patch=$(cat <<'CSSPATCH'
-
-/* archlinux-setup-calendar-patch */
-.message-list {
-  min-width: 0 !important;
-  max-width: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  opacity: 0 !important;
-}
-.message-list-placeholder,
-.message-list-sections {
-  min-width: 0 !important;
-  max-width: 0 !important;
-  width: 0 !important;
-  opacity: 0 !important;
-}
-CSSPATCH
-)
-    if [[ "$theme_css" == /usr/share/* ]]; then
-        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
-    else
-        printf '%s\n' "$patch" >> "$theme_css"
-    fi
-    ok "Notificaciones ocultas del menú de calendario"
-}
-
 apply_tweaks() {
     step "8/8 — Configuración GNOME (dconf)"
 
@@ -419,9 +378,11 @@ apply_tweaks() {
     info "Cargando configuración GNOME desde gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
+    info "Limpiando lista de extensiones desactivadas..."
+    gsettings reset org.gnome.shell disabled-extensions
+
     _install_app_grid_icon
     _overview_patch_css
-    _calendar_patch_css
 
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
