@@ -42,7 +42,7 @@ refresh_dconf() {
         info "Activando extensiones..."
         local exts=(
             dash-to-dock@micxgx.gmail.com
-            blur-my-shell@auber.me
+            blur-my-shell@aunetx
             user-theme@gnome-shell-extensions.gcampax.github.com
             appindicatorsupport@rgcjonas.gmail.com
             Vitals@CoreCoding.com
