@@ -51,6 +51,7 @@ refresh_dconf() {
             hidetopbar@mathieu.bidon.ca
             dock-magnify@archlinux-setup
             calendar-tweaks@archlinux-setup
+            panel-tweaks@archlinux-setup
         )
         for ext in "${exts[@]}"; do
             gnome-extensions enable "$ext" 2>/dev/null || true
@@ -150,9 +151,19 @@ refresh_dock() {
     cp "${CONFIGS_DIR}/gnome/calendar-tweaks/stylesheet.css" "$ext_dir/"
     ok "calendar-tweaks copiado"
 
+    uuid="panel-tweaks@archlinux-setup"
+    ext_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
+    info "Copiando archivos de panel-tweaks..."
+    mkdir -p "$ext_dir/icons"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/extension.js"   "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/metadata.json"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/stylesheet.css"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/icons/arch-symbolic.svg" "$ext_dir/icons/"
+    ok "panel-tweaks copiado"
+
     if command -v gnome-extensions &>/dev/null; then
         info "Recargando extensiones custom..."
-        for uuid in dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup; do
+        for uuid in dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup panel-tweaks@archlinux-setup; do
             gnome-extensions disable "$uuid" 2>/dev/null || true
             sleep 0.3
             gnome-extensions enable  "$uuid" 2>/dev/null || true

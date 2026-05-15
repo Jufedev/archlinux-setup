@@ -195,6 +195,16 @@ install_extensions() {
     cp "${CONFIGS_DIR}/gnome/calendar-tweaks/stylesheet.css" "$ext_dir/"
     ok "Extensión calendar-tweaks instalada"
 
+    # Extensión custom: reordenar panel (quick settings a la izquierda, Arch icon, fecha a la derecha)
+    info "Instalando extensión panel-tweaks..."
+    ext_dir="$HOME/.local/share/gnome-shell/extensions/panel-tweaks@archlinux-setup"
+    mkdir -p "$ext_dir/icons"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/metadata.json"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/extension.js"   "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/stylesheet.css"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/panel-tweaks/icons/arch-symbolic.svg" "$ext_dir/icons/"
+    ok "Extensión panel-tweaks instalada"
+
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
 }
 
@@ -392,6 +402,7 @@ apply_tweaks() {
             hidetopbar@mathieu.bidon.ca
             dock-magnify@archlinux-setup
             calendar-tweaks@archlinux-setup
+            panel-tweaks@archlinux-setup
         )
         for ext in "${exts[@]}"; do
             gnome-extensions enable "$ext" 2>/dev/null || true
