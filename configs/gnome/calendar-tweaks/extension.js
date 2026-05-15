@@ -5,13 +5,13 @@ export default class CalendarTweaks extends Extension {
     enable() {
         const ml = Main.panel.statusArea.dateMenu._messageList;
         this._ml = ml;
-        this._origExpand = ml.x_expand;
-        ml.x_expand = false;
+        this._origVisible = ml.visible;
+        ml.visible = false;
     }
 
     disable() {
         if (this._ml)
-            this._ml.x_expand = this._origExpand ?? true;
+            this._ml.visible = this._origVisible ?? true;
         this._ml = null;
     }
 }

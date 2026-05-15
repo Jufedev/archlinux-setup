@@ -1,7 +1,7 @@
-.message-list {
-    width: 0 !important;
-    min-width: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-width: 0 !important;
+.datemenu-calendar-column:ltr {
+    margin-left: 0 !important;
+}
+
+.datemenu-calendar-column:rtl {
+    margin-right: 0 !important;
 }
