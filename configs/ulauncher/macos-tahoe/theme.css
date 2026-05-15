@@ -1,16 +1,26 @@
 /* macOS Tahoe Dark — Ulauncher theme (GTK < 3.20 fallback) */
 
-decoration {
+/* Force transparency on window + all intermediate GTK containers
+   that the extended dark theme may paint opaque */
+decoration,
+window,
+window.background,
+#ulauncher-window,
+box,
+overlay,
+scrolledwindow,
+viewport,
+frame {
     background-color: transparent;
+    background-image: none;
+}
+
+decoration {
     border-radius: 22px;
     box-shadow: none;
     border: none;
     margin: 0;
     padding: 0;
-}
-
-window.background {
-    background-color: transparent;
 }
 
 .app {
