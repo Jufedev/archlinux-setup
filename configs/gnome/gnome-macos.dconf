@@ -7,16 +7,19 @@
 enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@auber.me', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com', 'hidetopbar@mathieu.bidon.ca', 'dock-magnify@archlinux-setup']
 
 [org/gnome/desktop/interface]
-gtk-theme='WhiteSur-Light'
+gtk-theme='WhiteSur-Dark'
 icon-theme='WhiteSur'
 cursor-theme='WhiteSur-cursors'
-color-scheme='default'
+color-scheme='prefer-dark'
 font-name='Inter Regular 11'
 document-font-name='Inter Regular 11'
 monospace-font-name='JetBrainsMono Nerd Font 11'
 font-hinting='slight'
 font-antialiasing='rgba'
 enable-animations=true
+clock-format='24h'
+clock-show-weekday=true
+clock-show-date=true
 clock-show-seconds=false
 
 [org/gnome/desktop/wm/preferences]
@@ -84,4 +87,4 @@ mouse-sensitive-fullscreen-window=true
 animation-time-autohide=0.15
 
 [org/gnome/shell/extensions/user-theme]
-name='WhiteSur-Light'
+name='WhiteSur-Dark'

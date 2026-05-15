@@ -151,15 +151,15 @@ install_theme() {
 
     ok "Tema WhiteSur instalado"
 
-    info "Aplicando tema WhiteSur a apps libadwaita (GTK4)..."
+    info "Aplicando tema WhiteSur Dark a apps libadwaita (GTK4)..."
     local whitesur_tmp
     whitesur_tmp=$(mktemp -d)
     git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$whitesur_tmp"
-    (cd "$whitesur_tmp" && ./install.sh -l)
+    (cd "$whitesur_tmp" && ./install.sh -l -c Dark)
     rm -rf "$whitesur_tmp"
-    ok "Override GTK4/libadwaita aplicado (botones macOS en todas las ventanas)"
+    ok "Override GTK4/libadwaita Dark aplicado (botones macOS en todas las ventanas)"
 
-    info "Para parchear GDM: cd /usr/share/themes/WhiteSur-Light && sudo ./tweaks.sh -g"
+    info "Para parchear GDM: corré --gdm"
 }
 
 install_extensions() {
