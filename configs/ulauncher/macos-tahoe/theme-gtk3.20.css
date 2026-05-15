@@ -1,6 +1,10 @@
 /* macOS Tahoe Dark — Ulauncher theme (GTK 3.20+) */
 
-/* ── Window transparency ─────────────────────────────────────────────── */
+/* ── Force window transparency over base theme + GTK theme ───────────── */
+@define-color window_bg_color transparent;
+@define-color theme_bg_color transparent;
+@define-color content_view_bg transparent;
+
 decoration {
     background-color: transparent !important;
     background-image: none !important;
@@ -11,7 +15,7 @@ decoration {
     padding: 0 !important;
 }
 
-window, window.background, .window-frame {
+window, window.background, .window-frame, .background {
     background-color: transparent !important;
     background-image: none !important;
     box-shadow: none !important;

@@ -1,6 +1,9 @@
 /* macOS Tahoe Dark — Ulauncher theme (GTK < 3.20 fallback) */
 
-/* ── Window transparency ─────────────────────────────────────────────── */
+@define-color window_bg_color transparent;
+@define-color theme_bg_color transparent;
+@define-color content_view_bg transparent;
+
 decoration {
     background-color: transparent !important;
     background-image: none !important;
@@ -11,14 +14,13 @@ decoration {
     padding: 0 !important;
 }
 
-window, window.background, .window-frame {
+window, window.background, .window-frame, .background {
     background-color: transparent !important;
     background-image: none !important;
     box-shadow: none !important;
     border: none !important;
 }
 
-/* ── Main container ──────────────────────────────────────────────────── */
 .app {
     background-color: rgba(28, 28, 32, 0.92);
     border-radius: 22px;
@@ -26,7 +28,6 @@ window, window.background, .window-frame {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
 }
 
-/* ── Search input ────────────────────────────────────────────────────── */
 .input-wrapper {
     padding: 4px 8px;
     background-color: transparent;
@@ -42,7 +43,6 @@ window, window.background, .window-frame {
     padding: 12px 16px;
 }
 
-/* ── Result items ────────────────────────────────────────────────────── */
 .item-box {
     border-radius: 10px;
     padding: 8px 12px;
@@ -76,7 +76,6 @@ window, window.background, .window-frame {
     margin-right: 12px;
 }
 
-/* ── Preferences gear ────────────────────────────────────────────────── */
 .prefs-btn {
     opacity: 0.4;
     border: none;
