@@ -314,7 +314,7 @@ _install_app_grid_icon() {
 
 _overview_patch_css() {
     local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
         if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
             theme_css="$dir/gnome-shell/gnome-shell.css"
             break
@@ -322,7 +322,7 @@ _overview_patch_css() {
     done
 
     if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Light gnome-shell.css no encontrado — overview sin parchear"
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — overview sin parchear"
         return
     fi
 
@@ -356,6 +356,47 @@ CSSPATCH
     ok "Workspace thumbnails ocultos via CSS (compatible con Blur My Shell)"
 }
 
+_calendar_patch_css() {
+    local theme_css=""
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
+        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
+            theme_css="$dir/gnome-shell/gnome-shell.css"
+            break
+        fi
+    done
+
+    if [[ -z "$theme_css" ]]; then
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — calendario sin parchear"
+        return
+    fi
+
+    if grep -q 'archlinux-setup-calendar-patch' "$theme_css" 2>/dev/null; then
+        ok "Calendar CSS ya parcheado"
+        return
+    fi
+
+    info "Parcheando calendario: $theme_css"
+    local patch
+    patch=$(cat <<'CSSPATCH'
+
+/* archlinux-setup-calendar-patch */
+.message-list {
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+CSSPATCH
+)
+    if [[ "$theme_css" == /usr/share/* ]]; then
+        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
+    else
+        printf '%s\n' "$patch" >> "$theme_css"
+    fi
+    ok "Notificaciones ocultas del menú de calendario"
+}
+
 apply_tweaks() {
     step "8/8 — Configuración GNOME (dconf)"
 
@@ -372,6 +413,7 @@ apply_tweaks() {
 
     _install_app_grid_icon
     _overview_patch_css
+    _calendar_patch_css
 
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
@@ -488,7 +530,7 @@ CSSPATCH
 
 _lock_screen_patch_css() {
     local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
         if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
             theme_css="$dir/gnome-shell/gnome-shell.css"
             break
@@ -496,7 +538,7 @@ _lock_screen_patch_css() {
     done
 
     if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Light gnome-shell.css no encontrado — lock screen sin parchear"
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — lock screen sin parchear"
         return
     fi
 
