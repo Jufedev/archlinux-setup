@@ -1,9 +1,9 @@
 /* macOS Tahoe Dark — Ulauncher theme (GTK 3.20+) */
 
 decoration {
-    background-color: transparent;
+    background-color: rgba(28, 28, 32, 0.92);
     border-radius: 22px;
-    box-shadow: none;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
     border: none;
     margin: 0;
     padding: 0;
@@ -11,7 +11,8 @@ decoration {
 
 window.background,
 #ulauncher-window {
-    background-color: transparent;
+    background-color: rgba(28, 28, 32, 0.92);
+    border-radius: 22px;
 }
 
 .app {
