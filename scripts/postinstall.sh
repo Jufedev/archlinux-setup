@@ -381,10 +381,18 @@ _calendar_patch_css() {
 
 /* archlinux-setup-calendar-patch */
 .message-list {
-  width: 0 !important;
   min-width: 0 !important;
+  max-width: 0 !important;
+  width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+  opacity: 0 !important;
+}
+.message-list-placeholder,
+.message-list-sections {
+  min-width: 0 !important;
+  max-width: 0 !important;
+  width: 0 !important;
   opacity: 0 !important;
 }
 CSSPATCH

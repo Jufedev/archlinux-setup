@@ -62,11 +62,12 @@ refresh_dconf() {
     fi
 
     _overview_patch_css
+    _calendar_patch_css
 }
 
 _overview_patch_css() {
     local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
         if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
             theme_css="$dir/gnome-shell/gnome-shell.css"
             break
@@ -74,7 +75,7 @@ _overview_patch_css() {
     done
 
     if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Light gnome-shell.css no encontrado — overview sin parchear"
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — overview sin parchear"
         return
     fi
 
@@ -106,6 +107,55 @@ CSSPATCH
         printf '%s\n' "$patch" >> "$theme_css"
     fi
     ok "Workspace thumbnails ocultos via CSS (compatible con Blur My Shell)"
+}
+
+_calendar_patch_css() {
+    local theme_css=""
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
+        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
+            theme_css="$dir/gnome-shell/gnome-shell.css"
+            break
+        fi
+    done
+
+    if [[ -z "$theme_css" ]]; then
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — calendario sin parchear"
+        return
+    fi
+
+    if grep -q 'archlinux-setup-calendar-patch' "$theme_css" 2>/dev/null; then
+        ok "Calendar CSS ya parcheado"
+        return
+    fi
+
+    info "Parcheando calendario: $theme_css"
+    local patch
+    patch=$(cat <<'CSSPATCH'
+
+/* archlinux-setup-calendar-patch */
+.message-list {
+  min-width: 0 !important;
+  max-width: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+.message-list-placeholder,
+.message-list-sections {
+  min-width: 0 !important;
+  max-width: 0 !important;
+  width: 0 !important;
+  opacity: 0 !important;
+}
+CSSPATCH
+)
+    if [[ "$theme_css" == /usr/share/* ]]; then
+        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
+    else
+        printf '%s\n' "$patch" >> "$theme_css"
+    fi
+    ok "Notificaciones ocultas del menú de calendario"
 }
 
 # ── Extensión dock-magnify ────────────────────────────────────────────────
@@ -213,7 +263,7 @@ CSSPATCH
 
 _lock_screen_patch_css() {
     local theme_css=""
-    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+    for dir in /usr/share/themes/WhiteSur-Dark "$HOME/.themes/WhiteSur-Dark" "$HOME/.local/share/themes/WhiteSur-Dark"; do
         if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
             theme_css="$dir/gnome-shell/gnome-shell.css"
             break
@@ -221,7 +271,7 @@ _lock_screen_patch_css() {
     done
 
     if [[ -z "$theme_css" ]]; then
-        warn "WhiteSur-Light gnome-shell.css no encontrado — lock screen sin parchear"
+        warn "WhiteSur-Dark gnome-shell.css no encontrado — lock screen sin parchear"
         return
     fi
 
@@ -272,7 +322,7 @@ CSSPATCH
 _gdm_generate_blur() {
     local dir="$1"
 
-    if [[ -f "$dir/Ventura-light-blur.jpg" && -f "$dir/Ventura-dark-blur.jpg" ]]; then
+    if [[ -f "$dir/WhiteSur-light-blur.jpg" && -f "$dir/WhiteSur-blur.jpg" ]]; then
         return
     fi
 
@@ -284,21 +334,26 @@ _gdm_generate_blur() {
     local blur_cmd="magick"
     command -v magick &>/dev/null || blur_cmd="convert"
 
-    for variant in light dark; do
-        local src="$dir/Ventura-${variant}.jpg"
-        local dst="$dir/Ventura-${variant}-blur.jpg"
-        if [[ -f "$src" && ! -f "$dst" ]]; then
-            info "Generando blur: Ventura-${variant}-blur.jpg..."
-            sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
-            ok "Ventura-${variant}-blur.jpg"
-        fi
-    done
+    local src dst
+    src="$dir/WhiteSur-light.jpg"; dst="$dir/WhiteSur-light-blur.jpg"
+    if [[ -f "$src" && ! -f "$dst" ]]; then
+        info "Generando blur: WhiteSur-light-blur.jpg..."
+        sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+        ok "WhiteSur-light-blur.jpg"
+    fi
+
+    src="$dir/WhiteSur.jpg"; dst="$dir/WhiteSur-blur.jpg"
+    if [[ -f "$src" && ! -f "$dst" ]]; then
+        info "Generando blur: WhiteSur-blur.jpg..."
+        sudo "$blur_cmd" "$src" -blur 0x30 "$dst"
+        ok "WhiteSur-blur.jpg"
+    fi
 }
 
 refresh_gdm() {
     warn "Re-aplicando tema GDM — puede tardar 1-2 min"
 
-    _gdm_generate_blur "/usr/share/backgrounds/Ventura"
+    _gdm_generate_blur "/usr/share/backgrounds/WhiteSur"
 
     local tmpdir
     tmpdir=$(mktemp -d)
@@ -322,15 +377,15 @@ refresh_gdm() {
 
 # ── Todo (sin GDM) ────────────────────────────────────────────────────────
 refresh_wallpaper() {
-    local ventura_xml="$HOME/.local/share/backgrounds/Ventura/Ventura-timed.xml"
-    if [[ ! -f "$ventura_xml" ]]; then
+    local whitesur_xml="$HOME/.local/share/backgrounds/WhiteSur/WhiteSur-timed.xml"
+    if [[ ! -f "$whitesur_xml" ]]; then
         warn "Wallpapers no instalados — corré: bash scripts/postinstall.sh --wallpapers"
         return
     fi
-    gsettings set org.gnome.desktop.background picture-uri "file://${ventura_xml}"
-    gsettings set org.gnome.desktop.background picture-uri-dark "file://${ventura_xml}"
+    gsettings set org.gnome.desktop.background picture-uri "file://${whitesur_xml}"
+    gsettings set org.gnome.desktop.background picture-uri-dark "file://${whitesur_xml}"
     gsettings set org.gnome.desktop.background picture-options "zoom"
-    ok "Wallpaper dinámico Ventura activado"
+    ok "Wallpaper dinámico WhiteSur (Big Sur) activado"
 }
 
 refresh_all() {
