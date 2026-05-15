@@ -301,11 +301,20 @@ install_spotlight() {
 SETTINGS
     ok "Ulauncher configurado (tema: macOS Tahoe Dark, hotkey: via GNOME Ctrl+Space)"
 
+    # Override systemd service: forzar X11 backend para transparencia en Wayland
+    local override_dir="$HOME/.config/systemd/user/ulauncher.service.d"
+    mkdir -p "$override_dir"
+    cat > "$override_dir/x11-backend.conf" <<'OVERRIDE'
+[Service]
+Environment=GDK_BACKEND=x11
+OVERRIDE
+    systemctl --user daemon-reload
+
     # Habilitar autostart
     systemctl --user enable ulauncher 2>/dev/null || true
-    systemctl --user start ulauncher 2>/dev/null || true
+    systemctl --user restart ulauncher 2>/dev/null || true
 
-    ok "Ulauncher instalado y listo"
+    ok "Ulauncher instalado y listo (X11 backend para transparencia)"
 }
 
 install_apps() {

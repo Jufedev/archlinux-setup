@@ -395,8 +395,8 @@ with open('$settings', 'w') as f: json.dump(cfg, f, indent=4)
     if pgrep -x ulauncher &>/dev/null; then
         pkill -x ulauncher
         sleep 0.5
-        nohup ulauncher --hide-window &>/dev/null &
-        ok "Ulauncher reiniciado"
+        GDK_BACKEND=x11 nohup ulauncher --hide-window &>/dev/null &
+        ok "Ulauncher reiniciado (X11 backend)"
     fi
 }
 
