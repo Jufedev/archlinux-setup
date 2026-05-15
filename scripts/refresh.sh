@@ -380,10 +380,11 @@ refresh_ulauncher() {
     local settings="$HOME/.config/ulauncher/settings.json"
     if [[ -f "$settings" ]] && command -v python3 &>/dev/null; then
         python3 -c "
-import json
+import json, sys
 with open('$settings') as f: cfg = json.load(f)
 cfg['theme-name'] = 'macos-tahoe'
-cfg['hotkey-show-app'] = ''
+cfg['hotkey-show-app'] = None
+cfg['show-indicator-icon'] = False
 with open('$settings', 'w') as f: json.dump(cfg, f, indent=4)
 "
         ok "settings.json actualizado (tema: macos-tahoe)"

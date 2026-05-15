@@ -1,13 +1,16 @@
 /* macOS Tahoe Dark — Ulauncher theme (GTK 3.20+) */
 
-/* Kill background on all containers between GTK window and .app */
-window > * ,
-window > box,
-window > frame,
-window > overlay,
-window > grid {
+decoration {
     background-color: transparent;
-    background-image: none;
+    border-radius: 22px;
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+window.background {
+    background-color: transparent;
 }
 
 .app {
