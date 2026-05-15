@@ -8,40 +8,41 @@ export default class CalendarTweaks extends Extension {
         this._box = this._messageList.get_parent();
         if (!this._box) return;
 
-        this._separator = null;
-        for (const child of this._box.get_children()) {
-            if (child !== this._messageList &&
-                child.has_style_class_name?.('calendar-vertical-separator')) {
-                this._separator = child;
-                break;
-            }
-        }
+        const children = this._box.get_children();
+        const msgIdx = children.indexOf(this._messageList);
+        this._separator = msgIdx > 0 ? children[msgIdx - 1] : null;
+        if (this._separator?.get_n_children?.() > 0)
+            this._separator = null;
 
         if (this._separator)
             this._box.remove_child(this._separator);
         this._box.remove_child(this._messageList);
 
-        this._origBoxStyle = this._box.get_style();
-        this._box.set_style('min-width: 0;');
-
-        this._menuBox = dateMenu.menu.box;
-        this._origMenuBoxStyle = this._menuBox.get_style();
-        this._menuBox.set_style('min-width: 0;');
+        this._styledActors = [];
+        let actor = this._box;
+        while (actor) {
+            if (actor.add_style_class_name) {
+                actor.add_style_class_name('ct-compact');
+                this._styledActors.push(actor);
+            }
+            if (actor.has_style_class_name?.('popup-menu-boxpointer'))
+                break;
+            actor = actor.get_parent();
+        }
     }
 
     disable() {
+        for (const a of this._styledActors || [])
+            a.remove_style_class_name('ct-compact');
         if (this._box) {
-            this._box.set_style(this._origBoxStyle || '');
             if (this._separator)
                 this._box.add_child(this._separator);
             if (this._messageList)
                 this._box.add_child(this._messageList);
         }
-        if (this._menuBox)
-            this._menuBox.set_style(this._origMenuBoxStyle || '');
         this._messageList = null;
         this._separator = null;
         this._box = null;
-        this._menuBox = null;
+        this._styledActors = null;
     }
 }

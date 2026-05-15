@@ -145,8 +145,9 @@ refresh_dock() {
     ext_dir="$HOME/.local/share/gnome-shell/extensions/$uuid"
     info "Copiando archivos de calendar-tweaks..."
     mkdir -p "$ext_dir"
-    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js"  "$ext_dir/"
-    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json" "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js"   "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/stylesheet.css" "$ext_dir/"
     ok "calendar-tweaks copiado"
 
     if command -v gnome-extensions &>/dev/null; then

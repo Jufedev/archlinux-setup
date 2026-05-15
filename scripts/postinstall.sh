@@ -190,8 +190,9 @@ install_extensions() {
     info "Instalando extensión calendar-tweaks..."
     ext_dir="$HOME/.local/share/gnome-shell/extensions/calendar-tweaks@archlinux-setup"
     mkdir -p "$ext_dir"
-    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json" "$ext_dir/"
-    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js" "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/metadata.json"  "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/extension.js"   "$ext_dir/"
+    cp "${CONFIGS_DIR}/gnome/calendar-tweaks/stylesheet.css" "$ext_dir/"
     ok "Extensión calendar-tweaks instalada"
 
     warn "Actívalas en GNOME Extensions después de reiniciar la sesión"
