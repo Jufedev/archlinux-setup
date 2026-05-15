@@ -375,7 +375,29 @@ refresh_ulauncher() {
     cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/manifest.json"       "$theme_dir/"
     cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme.css"            "$theme_dir/"
     cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme-gtk3.20.css"    "$theme_dir/"
-    ok "Tema Ulauncher macOS Tahoe Dark actualizado"
+    ok "Archivos del tema copiados"
+
+    local settings="$HOME/.config/ulauncher/settings.json"
+    if [[ -f "$settings" ]] && command -v python3 &>/dev/null; then
+        python3 -c "
+import json, sys
+with open('$settings') as f: cfg = json.load(f)
+cfg['theme-name'] = 'macos-tahoe'
+cfg['hotkey-show-app'] = None
+cfg['show-indicator-icon'] = False
+with open('$settings', 'w') as f: json.dump(cfg, f, indent=4)
+"
+        ok "settings.json actualizado (tema: macos-tahoe)"
+    else
+        warn "settings.json no encontrado o python3 no disponible — seleccioná el tema manualmente"
+    fi
+
+    if pgrep -x ulauncher &>/dev/null; then
+        pkill -x ulauncher
+        sleep 0.5
+        nohup ulauncher --hide-window &>/dev/null &
+        ok "Ulauncher reiniciado"
+    fi
 }
 
 # ── Todo (sin GDM) ────────────────────────────────────────────────────────
