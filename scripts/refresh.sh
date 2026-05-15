@@ -49,14 +49,7 @@ refresh_dconf() {
                 sudo rm -f "$existing"
                 sudo cp "$icon_src" "$existing"
                 found=true
-            done < <(find "$theme_dir" -name "view-app-grid-symbolic*" \( -type f -o -type l \) 2>/dev/null)
-
-            for subdir in scalable/actions symbolic/actions; do
-                if [[ -d "$theme_dir/$subdir" ]]; then
-                    sudo cp "$icon_src" "$theme_dir/$subdir/view-app-grid-symbolic.svg"
-                    found=true
-                fi
-            done
+            done < <(find "$theme_dir" -name "view-app-grid*" \( -type f -o -type l \) 2>/dev/null)
 
             sudo gtk-update-icon-cache -f "$theme_dir" 2>/dev/null || true
         done
@@ -101,6 +94,9 @@ _overview_patch_css() {
   margin: 0 !important;
   padding: 0 !important;
   opacity: 0 !important;
+}
+.workspace-background {
+  background-color: transparent !important;
 }
 CSSPATCH
 )
