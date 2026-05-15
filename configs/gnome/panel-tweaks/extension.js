@@ -8,17 +8,27 @@ export default class PanelTweaks extends Extension {
     enable() {
         this._qs = Main.panel.statusArea.quickSettings;
         this._moved = [];
+        this._arranged = {};
 
         this._moveToBox(this._qs, Main.panel._leftBox, 0);
         this._addArchIcon();
         this._hideSystemIndicator();
 
+        this._retryCount = 0;
         this._setupId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-            this._setupId = null;
             this._reorderIndicators();
-            this._arrangeCenter();
-            this._moveDateToRight();
-            return GLib.SOURCE_REMOVE;
+            this._tryArrange();
+
+            this._retryCount++;
+            const allDone = this._arranged.clipboard
+                && this._arranged.vitals
+                && this._arranged.dateMenu;
+
+            if (allDone || this._retryCount >= 10) {
+                this._setupId = null;
+                return GLib.SOURCE_REMOVE;
+            }
+            return GLib.SOURCE_CONTINUE;
         });
     }
 
@@ -46,6 +56,7 @@ export default class PanelTweaks extends Extension {
         }
 
         this._moved = [];
+        this._arranged = {};
         this._qs = null;
     }
 
@@ -93,22 +104,32 @@ export default class PanelTweaks extends Extension {
         }
     }
 
-    _arrangeCenter() {
+    _tryArrange() {
         const center = Main.panel._centerBox;
 
-        const clipboard = this._findIndicator('clipboard');
-        if (clipboard)
-            this._moveToBox(clipboard, center, 0);
+        if (!this._arranged.clipboard) {
+            const clipboard = this._findIndicator('clipboard');
+            if (clipboard) {
+                this._moveToBox(clipboard, center, 0);
+                this._arranged.clipboard = true;
+            }
+        }
 
-        const vitals = this._findIndicator('vitals');
-        if (vitals)
-            this._moveToBox(vitals, center);
-    }
+        if (!this._arranged.vitals) {
+            const vitals = this._findIndicator('vitals');
+            if (vitals) {
+                this._moveToBox(vitals, center);
+                this._arranged.vitals = true;
+            }
+        }
 
-    _moveDateToRight() {
-        const dateMenu = Main.panel.statusArea.dateMenu;
-        if (dateMenu)
-            this._moveToBox(dateMenu, Main.panel._rightBox);
+        if (!this._arranged.dateMenu) {
+            const dateMenu = Main.panel.statusArea.dateMenu;
+            if (dateMenu) {
+                this._moveToBox(dateMenu, Main.panel._rightBox);
+                this._arranged.dateMenu = true;
+            }
+        }
     }
 
     _findIndicator(pattern) {
