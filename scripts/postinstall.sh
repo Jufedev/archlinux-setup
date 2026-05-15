@@ -291,9 +291,9 @@ install_spotlight() {
 {
     "blacklisted-desktop-dirs": "/usr/share/locale:/usr/share/app-install:/usr/share/gnome:/usr/share/backgrounds:/usr/share/gnome-background-properties:/usr/share/nautilus",
     "clear-previous-query": true,
-    "hotkey-show-app": null,
+    "hotkey-show-app": "",
     "render-on-screen": "mouse-pointer-monitor",
-    "show-indicator-icon": false,
+    "show-indicator-icon": true,
     "show-recent-apps": "3",
     "terminal-command": "",
     "theme-name": "macos-tahoe"
