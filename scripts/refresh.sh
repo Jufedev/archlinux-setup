@@ -37,8 +37,26 @@ refresh_dconf() {
     gsettings set org.gnome.shell disable-extension-version-validation true
     info "Aplicando gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
-    info "Limpiando lista de extensiones desactivadas..."
-    gsettings reset org.gnome.shell disabled-extensions
+
+    if command -v gnome-extensions &>/dev/null; then
+        info "Activando extensiones..."
+        local exts=(
+            dash-to-dock@micxgx.gmail.com
+            blur-my-shell@auber.me
+            user-theme@gnome-shell-extensions.gcampax.github.com
+            appindicatorsupport@rgcjonas.gmail.com
+            Vitals@CoreCoding.com
+            just-perfection-desktop@just-perfection
+            clipboard-indicator@tudmotu.com
+            hidetopbar@mathieu.bidon.ca
+            dock-magnify@archlinux-setup
+            calendar-tweaks@archlinux-setup
+        )
+        for ext in "${exts[@]}"; do
+            gnome-extensions enable "$ext" 2>/dev/null || true
+        done
+        ok "Extensiones activadas"
+    fi
     ok "dconf aplicado"
 
     local icon_src="${CONFIGS_DIR}/gnome/icons/view-app-grid-symbolic.svg"

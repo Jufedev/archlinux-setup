@@ -378,8 +378,25 @@ apply_tweaks() {
     info "Cargando configuración GNOME desde gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
-    info "Limpiando lista de extensiones desactivadas..."
-    gsettings reset org.gnome.shell disabled-extensions
+    if command -v gnome-extensions &>/dev/null; then
+        info "Activando extensiones..."
+        local exts=(
+            dash-to-dock@micxgx.gmail.com
+            blur-my-shell@auber.me
+            user-theme@gnome-shell-extensions.gcampax.github.com
+            appindicatorsupport@rgcjonas.gmail.com
+            Vitals@CoreCoding.com
+            just-perfection-desktop@just-perfection
+            clipboard-indicator@tudmotu.com
+            hidetopbar@mathieu.bidon.ca
+            dock-magnify@archlinux-setup
+            calendar-tweaks@archlinux-setup
+        )
+        for ext in "${exts[@]}"; do
+            gnome-extensions enable "$ext" 2>/dev/null || true
+        done
+        ok "Extensiones activadas"
+    fi
 
     _install_app_grid_icon
     _overview_patch_css
