@@ -57,7 +57,7 @@ blur=true
 
 [org/gnome/shell/extensions/blur-my-shell/overview]
 blur=true
-style-components=0
+style-components=2
 
 [org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
 blur=true
@@ -68,7 +68,6 @@ activities-button=false
 app-menu=false
 workspace-popup=false
 workspace=false
-workspaces-in-app-grid=false
 workspace-switcher-size=0
 clock-menu-position=1
 clock-menu-position-offset=0

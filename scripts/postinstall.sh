@@ -319,6 +319,47 @@ _install_app_grid_icon() {
     fi
 }
 
+_overview_patch_css() {
+    local theme_css=""
+    for dir in /usr/share/themes/WhiteSur-Light "$HOME/.themes/WhiteSur-Light" "$HOME/.local/share/themes/WhiteSur-Light"; do
+        if [[ -f "$dir/gnome-shell/gnome-shell.css" ]]; then
+            theme_css="$dir/gnome-shell/gnome-shell.css"
+            break
+        fi
+    done
+
+    if [[ -z "$theme_css" ]]; then
+        warn "WhiteSur-Light gnome-shell.css no encontrado — overview sin parchear"
+        return
+    fi
+
+    if grep -q 'archlinux-setup-overview-patch' "$theme_css" 2>/dev/null; then
+        ok "Overview CSS ya parcheado"
+        return
+    fi
+
+    info "Parcheando overview: $theme_css"
+    local patch
+    patch=$(cat <<'CSSPATCH'
+
+/* archlinux-setup-overview-patch */
+.workspace-thumbnails {
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+CSSPATCH
+)
+    if [[ "$theme_css" == /usr/share/* ]]; then
+        printf '%s\n' "$patch" | sudo tee -a "$theme_css" > /dev/null
+    else
+        printf '%s\n' "$patch" >> "$theme_css"
+    fi
+    ok "Workspace thumbnails ocultos via CSS (compatible con Blur My Shell)"
+}
+
 apply_tweaks() {
     step "8/8 — Configuración GNOME (dconf)"
 
@@ -334,6 +375,7 @@ apply_tweaks() {
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
     _install_app_grid_icon
+    _overview_patch_css
 
     ok "Configuración GNOME aplicada (tema, fuentes, extensiones, touchpad, layout)"
 }
