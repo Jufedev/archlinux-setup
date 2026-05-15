@@ -3,23 +3,23 @@
 decoration {
     background-color: rgba(28, 28, 32, 0.92);
     border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-    border: none;
     margin: 0;
     padding: 0;
 }
 
 window.background,
 #ulauncher-window {
-    background-color: rgba(28, 28, 32, 0.92);
+    background-color: transparent;
     border-radius: 22px;
 }
 
 .app {
-    background-color: rgba(28, 28, 32, 0.92);
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+    background-color: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
 }
 
 #input {
