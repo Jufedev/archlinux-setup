@@ -162,13 +162,16 @@ refresh_dock() {
     ok "panel-tweaks copiado"
 
     if command -v gnome-extensions &>/dev/null; then
-        info "Recargando extensiones custom..."
-        for uuid in dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup panel-tweaks@archlinux-setup; do
+        info "Recargando extensiones..."
+        for uuid in panel-tweaks@archlinux-setup dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup clipboard-indicator@tudmotu.com; do
             gnome-extensions disable "$uuid" 2>/dev/null || true
-            sleep 0.3
-            gnome-extensions enable  "$uuid" 2>/dev/null || true
         done
-        ok "Extensiones custom recargadas"
+        sleep 0.5
+        for uuid in clipboard-indicator@tudmotu.com dock-magnify@archlinux-setup calendar-tweaks@archlinux-setup panel-tweaks@archlinux-setup; do
+            gnome-extensions enable "$uuid" 2>/dev/null || true
+            sleep 0.3
+        done
+        ok "Extensiones recargadas"
     else
         warn "gnome-extensions no disponible — reiniciá la sesión GNOME para ver los cambios"
     fi
