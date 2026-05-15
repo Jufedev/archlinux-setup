@@ -277,12 +277,35 @@ install_spotlight() {
 
     aur_install ulauncher
 
+    # Tema custom macOS Tahoe Dark
+    local theme_dir="$HOME/.config/ulauncher/user-themes/macos-tahoe"
+    mkdir -p "$theme_dir"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/manifest.json"       "$theme_dir/"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme.css"            "$theme_dir/"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme-gtk3.20.css"    "$theme_dir/"
+    ok "Tema macOS Tahoe Dark instalado"
+
+    # Configurar Ulauncher: tema custom, sin hotkey interno (GNOME keybinding lo maneja)
+    mkdir -p "$HOME/.config/ulauncher"
+    cat > "$HOME/.config/ulauncher/settings.json" <<'SETTINGS'
+{
+    "blacklisted-desktop-dirs": "/usr/share/locale:/usr/share/app-install:/usr/share/gnome:/usr/share/backgrounds:/usr/share/gnome-background-properties:/usr/share/nautilus",
+    "clear-previous-query": true,
+    "hotkey-show-app": null,
+    "render-on-screen": "mouse-pointer-monitor",
+    "show-indicator-icon": false,
+    "show-recent-apps": "3",
+    "terminal-command": "",
+    "theme-name": "macos-tahoe"
+}
+SETTINGS
+    ok "Ulauncher configurado (tema: macOS Tahoe Dark, hotkey: via GNOME Ctrl+Space)"
+
     # Habilitar autostart
     systemctl --user enable ulauncher 2>/dev/null || true
     systemctl --user start ulauncher 2>/dev/null || true
 
-    ok "Ulauncher instalado"
-    info "Configura el hotkey en Ulauncher → Preferences (Alt+Space recomendado)"
+    ok "Ulauncher instalado y listo"
 }
 
 install_apps() {

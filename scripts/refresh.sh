@@ -368,6 +368,16 @@ refresh_gdm() {
     warn "Corré: sudo systemctl restart gdm"
 }
 
+# ── Ulauncher theme ───────────────────────────────────────────────────────
+refresh_ulauncher() {
+    local theme_dir="$HOME/.config/ulauncher/user-themes/macos-tahoe"
+    mkdir -p "$theme_dir"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/manifest.json"       "$theme_dir/"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme.css"            "$theme_dir/"
+    cp "${CONFIGS_DIR}/ulauncher/macos-tahoe/theme-gtk3.20.css"    "$theme_dir/"
+    ok "Tema Ulauncher macOS Tahoe Dark actualizado"
+}
+
 # ── Todo (sin GDM) ────────────────────────────────────────────────────────
 refresh_wallpaper() {
     local whitesur_xml="$HOME/.local/share/backgrounds/WhiteSur/WhiteSur-timed.xml"
@@ -385,6 +395,7 @@ refresh_all() {
     refresh_configs
     refresh_dconf
     refresh_dock
+    refresh_ulauncher
     refresh_wallpaper
     echo ""
     ok "Refresh completo — configs, dconf, dock-magnify y wallpaper actualizados"
@@ -393,11 +404,12 @@ refresh_all() {
 
 # ── CLI ───────────────────────────────────────────────────────────────────
 case "${1:-}" in
-    --configs)   refresh_configs ;;
-    --dconf)     refresh_dconf ;;
-    --dock)      refresh_dock ;;
-    --wallpaper) refresh_wallpaper ;;
-    --gdm)       refresh_gdm ;;
-    --all|"")    refresh_all ;;
-    *) echo "Uso: $0 [--all | --configs | --dconf | --dock | --gdm]"; exit 1 ;;
+    --configs)    refresh_configs ;;
+    --dconf)      refresh_dconf ;;
+    --dock)       refresh_dock ;;
+    --ulauncher)  refresh_ulauncher ;;
+    --wallpaper)  refresh_wallpaper ;;
+    --gdm)        refresh_gdm ;;
+    --all|"")     refresh_all ;;
+    *) echo "Uso: $0 [--all | --configs | --dconf | --dock | --ulauncher | --gdm]"; exit 1 ;;
 esac
