@@ -20,17 +20,28 @@ export default class CalendarTweaks extends Extension {
         if (this._separator)
             this._box.remove_child(this._separator);
         this._box.remove_child(this._messageList);
+
+        this._origBoxStyle = this._box.get_style();
+        this._box.set_style('min-width: 0;');
+
+        this._menuBox = dateMenu.menu.box;
+        this._origMenuBoxStyle = this._menuBox.get_style();
+        this._menuBox.set_style('min-width: 0;');
     }
 
     disable() {
         if (this._box) {
+            this._box.set_style(this._origBoxStyle || '');
             if (this._separator)
                 this._box.add_child(this._separator);
             if (this._messageList)
                 this._box.add_child(this._messageList);
         }
+        if (this._menuBox)
+            this._menuBox.set_style(this._origMenuBoxStyle || '');
         this._messageList = null;
         this._separator = null;
         this._box = null;
+        this._menuBox = null;
     }
 }
