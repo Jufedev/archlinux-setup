@@ -7,47 +7,61 @@ import GLib from 'gi://GLib';
 export default class PanelTweaks extends Extension {
     enable() {
         this._qs = Main.panel.statusArea.quickSettings;
-        this._dateMenu = Main.panel.statusArea.dateMenu;
+        this._moved = [];
 
-        this._qsOrigParent = this._qs.container.get_parent();
-        this._qsOrigIndex = this._childIndex(this._qs.container);
-        this._dateOrigParent = this._dateMenu.container.get_parent();
-        this._dateOrigIndex = this._childIndex(this._dateMenu.container);
-
+        this._moveToBox(this._qs, Main.panel._leftBox, 0);
         this._addArchIcon();
         this._hideSystemIndicator();
 
-        this._qsOrigParent.remove_child(this._qs.container);
-        Main.panel._leftBox.insert_child_at_index(this._qs.container, 0);
-
-        this._dateOrigParent.remove_child(this._dateMenu.container);
-        Main.panel._rightBox.add_child(this._dateMenu.container);
+        this._setupId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            this._setupId = null;
+            this._reorderIndicators();
+            this._arrangeCenter();
+            this._moveDateToRight();
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     disable() {
+        if (this._setupId) {
+            GLib.source_remove(this._setupId);
+            this._setupId = null;
+        }
+
         if (this._archIcon) {
             this._archIcon.get_parent()?.remove_child(this._archIcon);
             this._archIcon.destroy();
             this._archIcon = null;
         }
 
-        if (this._qs._system)
+        if (this._qs?._system)
             this._qs._system.visible = true;
 
-        this._dateMenu.container.get_parent()?.remove_child(this._dateMenu.container);
-        this._dateOrigParent.insert_child_at_index(
-            this._dateMenu.container,
-            Math.min(this._dateOrigIndex, this._dateOrigParent.get_n_children())
-        );
+        for (const {container, origParent, origIndex} of [...this._moved].reverse()) {
+            container.get_parent()?.remove_child(container);
+            origParent.insert_child_at_index(
+                container,
+                Math.min(origIndex, origParent.get_n_children())
+            );
+        }
 
-        this._qs.container.get_parent()?.remove_child(this._qs.container);
-        this._qsOrigParent.insert_child_at_index(
-            this._qs.container,
-            Math.min(this._qsOrigIndex, this._qsOrigParent.get_n_children())
-        );
-
+        this._moved = [];
         this._qs = null;
-        this._dateMenu = null;
+    }
+
+    _moveToBox(indicator, box, index = -1) {
+        const container = indicator.container;
+        const origParent = container.get_parent();
+        if (!origParent) return;
+
+        const origIndex = origParent.get_children().indexOf(container);
+        this._moved.push({container, origParent, origIndex});
+
+        origParent.remove_child(container);
+        if (index >= 0)
+            box.insert_child_at_index(container, index);
+        else
+            box.add_child(container);
     }
 
     _addArchIcon() {
@@ -65,8 +79,44 @@ export default class PanelTweaks extends Extension {
             this._qs._system.visible = false;
     }
 
-    _childIndex(actor) {
-        const parent = actor.get_parent();
-        return parent ? parent.get_children().indexOf(actor) : 0;
+    _reorderIndicators() {
+        const ind = this._qs._indicators;
+
+        if (this._qs._volumeOutput && ind.contains(this._qs._volumeOutput)) {
+            ind.remove_child(this._qs._volumeOutput);
+            ind.insert_child_at_index(this._qs._volumeOutput, 1);
+        }
+
+        if (this._qs._network && ind.contains(this._qs._network)) {
+            ind.remove_child(this._qs._network);
+            ind.insert_child_at_index(this._qs._network, 2);
+        }
+    }
+
+    _arrangeCenter() {
+        const center = Main.panel._centerBox;
+
+        const clipboard = this._findIndicator('clipboard');
+        if (clipboard)
+            this._moveToBox(clipboard, center, 0);
+
+        const vitals = this._findIndicator('vitals');
+        if (vitals)
+            this._moveToBox(vitals, center);
+    }
+
+    _moveDateToRight() {
+        const dateMenu = Main.panel.statusArea.dateMenu;
+        if (dateMenu)
+            this._moveToBox(dateMenu, Main.panel._rightBox);
+    }
+
+    _findIndicator(pattern) {
+        const lc = pattern.toLowerCase();
+        for (const [key, val] of Object.entries(Main.panel.statusArea)) {
+            if (key.toLowerCase().includes(lc))
+                return val;
+        }
+        return null;
     }
 }

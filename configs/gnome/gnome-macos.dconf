@@ -4,7 +4,7 @@
 # ============================================================================
 
 [org/gnome/shell]
-enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com', 'hidetopbar@mathieu.bidon.ca', 'dock-magnify@archlinux-setup', 'calendar-tweaks@archlinux-setup']
+enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'Vitals@CoreCoding.com', 'just-perfection-desktop@just-perfection', 'clipboard-indicator@tudmotu.com', 'hidetopbar@mathieu.bidon.ca', 'dock-magnify@archlinux-setup', 'calendar-tweaks@archlinux-setup', 'panel-tweaks@archlinux-setup']
 disabled-extensions=@as []
 
 [org/gnome/desktop/interface]
@@ -79,7 +79,7 @@ app-menu=false
 workspace-popup=false
 workspace=false
 workspace-switcher-size=0
-clock-menu-position=1
+clock-menu-position=0
 clock-menu-position-offset=0
 startup-status=0
 animation=3
@@ -90,6 +90,12 @@ enable-active-window=true
 mouse-sensitive=true
 mouse-sensitive-fullscreen-window=true
 animation-time-autohide=0.15
+
+[org/gnome/shell/extensions/vitals]
+hot-sensors=['_processor_usage_', '_memory_usage_']
+fixed-widths=true
+hide-icons=false
+menu-centered=true
 
 [org/gnome/shell/extensions/user-theme]
 name='WhiteSur-Dark'
