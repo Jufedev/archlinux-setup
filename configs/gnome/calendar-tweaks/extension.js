@@ -1,5 +1,6 @@
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import GLib from 'gi://GLib';
 
 export default class CalendarTweaks extends Extension {
     enable() {
@@ -8,30 +9,38 @@ export default class CalendarTweaks extends Extension {
         this._box = this._messageList.get_parent();
         if (!this._box) return;
 
+        this._msgIndex = this._box.get_children().indexOf(this._messageList);
+        this._origXExpand = this._messageList.x_expand;
+        this._messageList.x_expand = false;
         this._box.remove_child(this._messageList);
 
-        this._bin = this._box.get_parent();
-        if (this._bin?.layout_manager?.frozen !== undefined)
-            this._bin.layout_manager.frozen = false;
-
-        this._forceRelayout();
+        const bin = this._box.get_parent();
+        if (bin?.layout_manager?.frozen !== undefined)
+            bin.layout_manager.frozen = false;
 
         this._openId = dateMenu.menu.connect('open-state-changed', (_menu, isOpen) => {
             if (!isOpen) return;
-            if (this._bin?.layout_manager?.frozen !== undefined)
-                this._bin.layout_manager.frozen = false;
-            this._forceRelayout();
+            if (bin?.layout_manager?.frozen !== undefined)
+                bin.layout_manager.frozen = false;
+            GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                this._centerPopup();
+                return GLib.SOURCE_REMOVE;
+            });
         });
         this._dateMenu = dateMenu;
     }
 
-    _forceRelayout() {
-        let actor = this._box;
-        while (actor) {
-            if (actor.queue_relayout)
-                actor.queue_relayout();
-            actor = actor.get_parent();
-        }
+    _centerPopup() {
+        const bp = this._dateMenu.menu._boxPointer;
+        if (!bp) return;
+        const clock = this._dateMenu._clockDisplay;
+        const [cx] = clock.get_transformed_position();
+        const center = cx + clock.width / 2;
+        const mon = Main.layoutManager.primaryMonitor;
+        const x = Math.max(mon.x,
+            Math.min(Math.round(center - bp.width / 2),
+                     mon.x + mon.width - bp.width));
+        bp.set_position(x, bp.y);
     }
 
     disable() {
@@ -39,11 +48,13 @@ export default class CalendarTweaks extends Extension {
             this._dateMenu.menu.disconnect(this._openId);
             this._openId = null;
         }
-        if (this._box && this._messageList)
-            this._box.insert_child_at_index(this._messageList, 0);
+        if (this._box && this._messageList) {
+            this._messageList.x_expand = this._origXExpand;
+            const idx = Math.min(this._msgIndex, this._box.get_n_children());
+            this._box.insert_child_at_index(this._messageList, idx);
+        }
         this._messageList = null;
         this._box = null;
-        this._bin = null;
         this._dateMenu = null;
     }
 }
