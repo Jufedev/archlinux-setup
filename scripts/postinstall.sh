@@ -124,7 +124,7 @@ ensure_yay() {
 # ============================================================================
 
 install_gnome() {
-    step "1/8 — GNOME Mínimo"
+    step "GNOME Mínimo"
 
     # Shell y display manager
     pac_install \
@@ -201,7 +201,7 @@ install_gnome() {
 }
 
 install_theme() {
-    step "2/8 — Tema WhiteSur (macOS)"
+    step "Tema WhiteSur (macOS)"
 
     # Remover versiones -git si existen (evita conflictos)
     local git_pkgs=""
@@ -230,7 +230,7 @@ install_theme() {
 }
 
 install_extensions() {
-    step "3/8 — Extensiones GNOME"
+    step "Extensiones GNOME"
 
     aur_install \
         gnome-shell-extension-dash-to-dock \
@@ -276,7 +276,7 @@ install_extensions() {
 }
 
 install_fonts() {
-    step "4/8 — Fuentes del sistema"
+    step "Fuentes del sistema"
 
     aur_install ttf-inter ttf-jetbrains-mono-nerd
 
@@ -284,7 +284,7 @@ install_fonts() {
 }
 
 install_terminal() {
-    step "5/8 — Terminal (Kitty + Zsh + Starship)"
+    step "Terminal (Kitty + Zsh + Starship)"
 
     pac_install kitty zsh starship
     aur_install zsh-autosuggestions zsh-syntax-highlighting
@@ -340,7 +340,7 @@ ZSHRC
 }
 
 install_spotlight() {
-    step "6/8 — Ulauncher (Spotlight equivalent)"
+    step "Ulauncher (Spotlight equivalent)"
 
     aur_install ulauncher
 
@@ -385,7 +385,7 @@ OVERRIDE
 }
 
 install_apps() {
-    step "7/8 — Apps, seguridad y entorno de desarrollo"
+    step "Apps, seguridad y entorno de desarrollo"
 
     # Apps
     pac_install flameshot
@@ -475,7 +475,7 @@ CSSPATCH
 }
 
 apply_tweaks() {
-    step "8/8 — Configuración GNOME (dconf)"
+    step "Configuración GNOME (dconf)"
 
     if ! command -v dconf &>/dev/null; then
         warn "dconf no disponible — ejecuta este paso después del primer login con GNOME"
