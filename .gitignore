@@ -3,3 +3,12 @@
 *.swo
 *~
 .DS_Store
+
+# Artefactos locales de tooling (gentle-ai / skills) — no van al repo
+.atl/
+
+# Llaves SSH — nunca subir credenciales al repo
+*.pem
+id_*
+*_ed25519
+*_rsa
