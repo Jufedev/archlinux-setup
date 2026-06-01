@@ -6,10 +6,14 @@
 # el config) queda disponible automáticamente en todas tus "VMs". No hay que
 # copiar nada: generás una vez en el host y funciona en todos lados.
 #
+# Por defecto la llave se protege con una passphrase ALEATORIA robusta que el
+# script genera y muestra al final junto con la pública, para que la guardes en
+# tu gestor de contraseñas. Como la llave tiene passphrase, dentro de distrobox
+# usás ssh-agent (ver README, sección Distrobox).
+#
 # Uso: bash scripts/ssh-github.sh [opciones]
 #   --email <correo>     Comentario de la llave (default: usuario@hostname)
-#   --passphrase         Pide passphrase (más seguro; requiere ssh-agent en
-#                        cada distrobox). Default: sin passphrase (frictionless)
+#   --no-passphrase      Genera la llave SIN passphrase (frictionless, menos seguro)
 #   --switch-remote      Cambia el origin de este repo de HTTPS a SSH sin preguntar
 #   --no-switch-remote   No toca el remote
 # ============================================================================
@@ -27,13 +31,13 @@ step()  { echo -e "\n${C}━━━ $1 ━━━${NC}\n"; }
 KEY="$HOME/.ssh/github_ed25519"
 SSH_CONFIG="$HOME/.ssh/config"
 EMAIL=""
-USE_PASSPHRASE=false
-SWITCH_REMOTE="ask"   # ask | yes | no
+PASSPHRASE_MODE="generate"   # generate | none
+SWITCH_REMOTE="ask"          # ask | yes | no
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --email)            EMAIL="${2:-}"; shift 2 ;;
-        --passphrase)       USE_PASSPHRASE=true; shift ;;
+        --no-passphrase)    PASSPHRASE_MODE="none"; shift ;;
         --switch-remote)    SWITCH_REMOTE="yes"; shift ;;
         --no-switch-remote) SWITCH_REMOTE="no"; shift ;;
         *) fail "Opción desconocida: $1" ;;
@@ -41,6 +45,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 command -v ssh-keygen &>/dev/null || fail "ssh-keygen no encontrado — instalá 'openssh': sudo pacman -S openssh"
+
+# Passphrase aleatoria robusta (openssl si está; si no, /dev/urandom)
+gen_passphrase() {
+    if command -v openssl &>/dev/null; then
+        openssl rand -base64 24
+    else
+        LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32; echo
+    fi
+}
 
 COMMENT="${EMAIL:-$(whoami)@$(hostnamectl --static 2>/dev/null || hostname)}"
 
@@ -50,16 +63,19 @@ step "1/4 — Llave SSH ed25519"
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 
+PASSPHRASE=""
 if [[ -f "$KEY" ]]; then
     warn "Ya existe $KEY — la reutilizo (no la sobreescribo)"
+    warn "Su passphrase es la que guardaste al crearla (el script no la puede mostrar)"
 else
     info "Generando llave para: $COMMENT"
-    if $USE_PASSPHRASE; then
-        ssh-keygen -t ed25519 -C "$COMMENT" -f "$KEY"
+    if [[ "$PASSPHRASE_MODE" == "none" ]]; then
+        ssh-keygen -t ed25519 -C "$COMMENT" -f "$KEY" -N "" >/dev/null
+        warn "Llave SIN passphrase (cómodo, pero menos seguro)."
     else
-        ssh-keygen -t ed25519 -C "$COMMENT" -f "$KEY" -N ""
-        warn "Llave SIN passphrase (cómodo para compartir con distrobox)."
-        warn "Si querés agregarle una después: ssh-keygen -p -f $KEY"
+        PASSPHRASE="$(gen_passphrase)"
+        ssh-keygen -t ed25519 -C "$COMMENT" -f "$KEY" -N "$PASSPHRASE" >/dev/null
+        ok "Llave creada con passphrase aleatoria robusta"
     fi
     chmod 600 "$KEY"
     chmod 644 "$KEY.pub"
@@ -87,30 +103,31 @@ EOF
     ok "Bloque github.com agregado a $SSH_CONFIG"
 fi
 
-# ── 3. Agente + clave pública ───────────────────────────────────────────────
-step "3/4 — ssh-agent + clave pública"
+# ── 3. ssh-agent + salida (pública + passphrase) ────────────────────────────
+step "3/4 — Clave pública + passphrase"
 
+# Aseguramos un ssh-agent corriendo. Con 'AddKeysToAgent yes' en el config, el
+# primer push/verify carga la llave y te pide la passphrase una sola vez.
 if [[ -z "${SSH_AUTH_SOCK:-}" ]] || ! ssh-add -l &>/dev/null; then
     eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
 fi
-ssh-add "$KEY" 2>/dev/null && ok "Llave cargada en ssh-agent" || warn "No se pudo cargar en ssh-agent (no es crítico)"
 
 PUB="$(cat "$KEY.pub")"
 
-# Copiar al portapapeles si hay herramienta disponible
-if command -v wl-copy &>/dev/null; then
-    printf '%s' "$PUB" | wl-copy && ok "Clave pública copiada al portapapeles (wl-copy)"
-elif command -v xclip &>/dev/null; then
-    printf '%s' "$PUB" | xclip -selection clipboard && ok "Clave pública copiada al portapapeles (xclip)"
-else
-    warn "No hay wl-copy/xclip — copiá la clave a mano"
+echo ""
+echo -e "${C}════════════════════════════════════════════════════════════${NC}"
+echo -e "${Y}  GUARDÁ ESTO EN TU GESTOR DE CONTRASEÑAS${NC}"
+echo -e "${C}════════════════════════════════════════════════════════════${NC}"
+if [[ -n "$PASSPHRASE" ]]; then
+    echo -e "${Y}PASSPHRASE:${NC}"
+    echo "  $PASSPHRASE"
+    echo ""
 fi
-
+echo -e "${C}CLAVE PÚBLICA:${NC}"
+echo "  $PUB"
+echo -e "${C}════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "${C}Tu clave pública:${NC}"
-echo "$PUB"
-echo ""
-echo -e "${Y}Pegala en GitHub → https://github.com/settings/ssh/new${NC}"
+echo -e "${Y}Pegá la CLAVE PÚBLICA en GitHub → https://github.com/settings/ssh/new${NC}"
 echo "  Title: lo que quieras (ej: $(hostnamectl --static 2>/dev/null || hostname))"
 echo "  Key type: Authentication Key"
 echo ""
@@ -158,4 +175,6 @@ fi
 
 echo ""
 ok "Listo — ya podés hacer push por SSH, sin tokens."
-info "distrobox: la llave en ~/.ssh ya está disponible dentro de tus contenedores."
+info "distrobox: la llave en ~/.ssh ya está adentro de tus contenedores."
+info "Como tiene passphrase, dentro del contenedor cargala una vez con ssh-agent:"
+info "  eval \"\$(ssh-agent -s)\" && ssh-add ~/.ssh/github_ed25519   (ver README → Distrobox)"
