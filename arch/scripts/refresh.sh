@@ -2,13 +2,14 @@
 # ============================================================================
 # Arch Linux — Refresh de configuraciones
 # Aplica cambios de configs sin reinstalar. Ideal para prueba y error.
-# Uso: bash scripts/refresh.sh [--all | --configs | --dconf | --dock | --ulauncher | --wallpaper | --gdm]
+# Uso: bash arch/scripts/refresh.sh [--all | --configs | --dconf | --dock | --ulauncher | --wallpaper | --gdm]
 # Sin argumentos = --all (todo excepto GDM)
 # ============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIGS_DIR="${SCRIPT_DIR}/../configs"
+SHARED_DIR="${SCRIPT_DIR}/../../shared"
 
 R='\033[0;31m'; G='\033[0;32m'; Y='\033[1;33m'; B='\033[0;34m'; C='\033[0;36m'; NC='\033[0m'
 info()  { echo -e "${B}[INFO]${NC}  $1"; }
@@ -24,7 +25,7 @@ refresh_configs() {
     cp "${CONFIGS_DIR}/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf"
     ok "kitty.conf"
 
-    cp "${CONFIGS_DIR}/starship/starship.toml" "$HOME/.config/starship.toml"
+    cp "${SHARED_DIR}/starship/starship.toml" "$HOME/.config/starship.toml"
     ok "starship.toml"
 }
 
