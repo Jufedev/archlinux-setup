@@ -224,46 +224,247 @@ install_apps() {
     ok "Apps, dev tools, and firewall configured"
 }
 
-# ── Módulo 4: WhiteSur themes (STUB — Slice 3) ──────────────────────────────
+# ── Módulo 4: WhiteSur themes ────────────────────────────────────────────────
+# Clona el repo WhiteSur-kde a un directorio temporal, ejecuta su install.sh y
+# aplica el look-and-feel global de Plasma. Re-ejecutar es idempotente (install.sh
+# sobreescribe los archivos existentes).
 install_whitesur_themes() {
-    info "TODO: Slice 3 — WhiteSur Plasma/GTK/Kvantum themes"
-    return 0
+    step "WhiteSur KDE — Plasma look-and-feel + Aurorae"
+
+    local tmp_dir
+    tmp_dir="$(mktemp -d)"
+    # Limpiar el directorio temporal al salir (éxito o error)
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    info "Cloning WhiteSur-kde..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-kde.git \
+        "$tmp_dir/WhiteSur-kde" 2>&1 | tee -a "$LOG_FILE"
+
+    info "Running WhiteSur-kde install.sh..."
+    bash "$tmp_dir/WhiteSur-kde/install.sh" 2>&1 | tee -a "$LOG_FILE"
+
+    # Aplicar el look-and-feel global (Plasma style + color scheme + window deco en un paso).
+    # El || true evita que falle si la sesión gráfica no está disponible (ej. CI, headless).
+    info "Applying WhiteSur look-and-feel..."
+    plasma-apply-lookandfeel -a com.github.vinceliuice.WhiteSur 2>&1 | tee -a "$LOG_FILE" \
+        || warn "plasma-apply-lookandfeel returned non-zero (normal si no hay sesión gráfica activa)"
+
+    ok "WhiteSur KDE theme installed"
 }
 
-# ── Módulo 5: Kvantum (STUB — Slice 3) ──────────────────────────────────────
+# ── Módulo 5: Kvantum ────────────────────────────────────────────────────────
+# Kvantum aplica el estilo de widgets Qt (el puente entre GTK-look y Qt apps).
+# Se instala vía dnf si no está presente, luego se configura el tema WhiteSurDark.
 apply_kvantum() {
-    info "TODO: Slice 3 — Kvantum WhiteSur widget style"
-    return 0
+    step "Kvantum — WhiteSurDark widget style"
+
+    # Instalar kvantum si no está disponible
+    if ! command -v kvantummanager &>/dev/null; then
+        info "kvantum not found — installing via dnf..."
+        dnf_install kvantum
+    fi
+
+    # Configurar el tema de Kvantum (creado por el install.sh de WhiteSur-kde)
+    kvantummanager --set WhiteSurDark 2>&1 | tee -a "$LOG_FILE" \
+        || warn "kvantummanager --set returned non-zero (normal fuera de sesión gráfica)"
+
+    # Registrar kvantum como el estilo de widgets en KDE
+    if command -v kwriteconfig6 &>/dev/null; then
+        kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum
+        info "KDE widget style set to kvantum"
+    fi
+
+    # Pedir a KWin que relea su config sin cerrar la sesión
+    [[ -n "$QDBUS" ]] && "$QDBUS" org.kde.KWin /KWin reconfigure 2>/dev/null \
+        || warn "KWin reconfigure skipped (QDBUS not available or headless)"
+
+    ok "Kvantum configured (WhiteSurDark)"
 }
 
-# ── Módulo 6: Icons + cursors (STUB — Slice 3) ──────────────────────────────
+# ── Módulo 6: Icons + cursors ────────────────────────────────────────────────
+# Instala WhiteSur-icon-theme y WhiteSur-cursors desde sus repos upstream.
 install_icons_cursors() {
-    info "TODO: Slice 3 — WhiteSur icons and cursors"
-    return 0
+    step "Icons + cursors — WhiteSur"
+
+    local tmp_dir
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    # Icons
+    info "Cloning WhiteSur-icon-theme..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-icon-theme.git \
+        "$tmp_dir/WhiteSur-icon-theme" 2>&1 | tee -a "$LOG_FILE"
+
+    info "Installing WhiteSur icon theme..."
+    bash "$tmp_dir/WhiteSur-icon-theme/install.sh" -a 2>&1 | tee -a "$LOG_FILE" \
+        || warn "icon theme install returned non-zero"
+
+    # Cursors
+    info "Cloning WhiteSur-cursors..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-cursors.git \
+        "$tmp_dir/WhiteSur-cursors" 2>&1 | tee -a "$LOG_FILE"
+
+    info "Installing WhiteSur cursors..."
+    bash "$tmp_dir/WhiteSur-cursors/install.sh" 2>&1 | tee -a "$LOG_FILE" \
+        || warn "cursor theme install returned non-zero"
+
+    # Aplicar en KDE (cambio permanente vía kwriteconfig6)
+    if command -v kwriteconfig6 &>/dev/null; then
+        kwriteconfig6 --file kdeglobals --group Icons --key Theme WhiteSur
+        kwriteconfig6 --file kcminputrc --group Mouse --key cursorTheme WhiteSur-cursors
+        info "KDE icon + cursor theme configured"
+    fi
+
+    # Aplicar cursor en sesión activa (|| true — puede fallar en headless)
+    plasma-apply-cursortheme WhiteSur-cursors 2>&1 | tee -a "$LOG_FILE" \
+        || warn "plasma-apply-cursortheme returned non-zero (normal fuera de sesión gráfica)"
+
+    ok "Icons and cursors installed (WhiteSur)"
 }
 
-# ── Módulo 7: Window decorations (STUB — Slice 3) ───────────────────────────
+# ── Módulo 7: Window decorations ─────────────────────────────────────────────
+# Aurorae WhiteSur + botones en la izquierda (estilo macOS: cerrar/min/max).
+# El tema Aurorae se instala con WhiteSur-kde (módulo 4).
 apply_window_decorations() {
-    info "TODO: Slice 3 — Aurorae WhiteSur window decorations + macOS button layout"
-    return 0
+    step "Window decorations — Aurorae WhiteSur + macOS button layout"
+
+    if command -v kwriteconfig6 &>/dev/null; then
+        # Seleccionar el backend Aurorae para las decoraciones de ventana
+        kwriteconfig6 --file kwinrc \
+            --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
+
+        # Tema específico dentro de Aurorae
+        kwriteconfig6 --file kwinrc \
+            --group org.kde.kdecoration2 --key theme __aurorae__svg__WhiteSur
+
+        # Layout de botones estilo macOS: cierre/minimizar/maximizar a la IZQUIERDA
+        # Códigos: X=close, I=minimize, A=maximize, M=menu, S=on-all-desktops
+        kwriteconfig6 --file kwinrc \
+            --group org.kde.kdecoration2 --key ButtonsOnLeft "XIA"
+        kwriteconfig6 --file kwinrc \
+            --group org.kde.kdecoration2 --key ButtonsOnRight ""
+
+        info "Aurorae WhiteSur decoration and macOS button layout configured"
+    else
+        warn "kwriteconfig6 not found — skipping window decoration config"
+    fi
+
+    # Recargar KWin para aplicar sin cerrar sesión
+    [[ -n "$QDBUS" ]] && "$QDBUS" org.kde.KWin /KWin reconfigure 2>/dev/null \
+        || warn "KWin reconfigure skipped (QDBUS not available or headless)"
+
+    ok "Window decorations applied (Aurorae WhiteSur, macOS left buttons)"
 }
 
-# ── Módulo 8: Wallpapers (STUB — Slice 3) ───────────────────────────────────
+# ── Módulo 8: Wallpapers ─────────────────────────────────────────────────────
+# Instala la colección WhiteSur-wallpapers y establece uno como fondo de Plasma.
 install_wallpapers() {
-    info "TODO: Slice 3 — WhiteSur wallpapers"
-    return 0
+    step "Wallpapers — WhiteSur"
+
+    local tmp_dir
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    info "Cloning WhiteSur-wallpapers..."
+    git clone --depth=1 https://github.com/vinceliuice/WhiteSur-wallpapers.git \
+        "$tmp_dir/WhiteSur-wallpapers" 2>&1 | tee -a "$LOG_FILE"
+
+    # El repo usa install-wallpapers.sh o install.sh según la versión del upstream
+    local install_script
+    if [[ -f "$tmp_dir/WhiteSur-wallpapers/install-wallpapers.sh" ]]; then
+        install_script="install-wallpapers.sh"
+    else
+        install_script="install.sh"
+    fi
+
+    info "Installing WhiteSur wallpapers..."
+    bash "$tmp_dir/WhiteSur-wallpapers/$install_script" 2>&1 | tee -a "$LOG_FILE" \
+        || warn "wallpaper install returned non-zero"
+
+    # Establecer un wallpaper por defecto en Plasma (|| true — requiere sesión gráfica activa)
+    # El install.sh copia los wallpapers a ~/Pictures/WhiteSur o /usr/share/wallpapers/WhiteSur
+    local wallpaper_path
+    wallpaper_path="${HOME}/Pictures/WhiteSur/WhiteSur-light-nord.jpg"
+    if [[ ! -f "$wallpaper_path" ]]; then
+        # Fallback a la ubicación del sistema
+        wallpaper_path="/usr/share/wallpapers/WhiteSur/contents/images/5120x2880.jpg"
+    fi
+
+    if [[ -f "$wallpaper_path" ]]; then
+        plasma-apply-wallpaperimage "$wallpaper_path" 2>&1 | tee -a "$LOG_FILE" \
+            || warn "plasma-apply-wallpaperimage returned non-zero (normal fuera de sesión gráfica)"
+        info "Wallpaper set: $wallpaper_path"
+    else
+        warn "Default wallpaper path not found — set manually from System Settings"
+    fi
+
+    ok "WhiteSur wallpapers installed"
 }
 
-# ── Módulo 9: Panel layout (STUB — Slice 4) ─────────────────────────────────
+# ── Módulo 9: Panel layout ───────────────────────────────────────────────────
+# Aplica el layout macOS (barra superior + dock inferior) vía Plasma Scripting API.
+# El JS borra los paneles existentes y los reconstruye → idempotente pero DESTRUCTIVO
+# para customizaciones manuales (se documenta en panel-layout.js y en el README).
 apply_panel_layout() {
-    info "TODO: Slice 4 — macOS-style panel layout via Plasma Scripting API"
-    return 0
+    step "Panel layout — macOS-style (top bar + bottom dock)"
+
+    local panel_js="${CONFIGS_DIR}/kde/panel-layout.js"
+
+    if [[ ! -f "$panel_js" ]]; then
+        warn "panel-layout.js not found at $panel_js — skipping panel layout"
+        return 0
+    fi
+
+    if [[ -z "$QDBUS" ]]; then
+        warn "QDBUS not found — skipping panel layout (run --panel after login)"
+        return 0
+    fi
+
+    info "Applying panel layout via Plasma Scripting API..."
+    "$QDBUS" org.kde.plasma.shell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript \
+        "$(cat "$panel_js")" 2>&1 | tee -a "$LOG_FILE" \
+        || warn "evaluateScript returned non-zero (normal si Plasma no está corriendo)"
+
+    ok "Panel layout applied (top menu bar + bottom icon dock)"
 }
 
-# ── Módulo 10: Konsole profile (STUB — Slice 4) ─────────────────────────────
+# ── Módulo 10: Konsole profile ───────────────────────────────────────────────
+# Copia el perfil y el esquema de color MacOS a ~/.local/share/konsole/
+# y configura Konsole para usarlo como perfil por defecto.
 install_konsole_profile() {
-    info "TODO: Slice 4 — Konsole color scheme and profile"
-    return 0
+    step "Konsole — MacOS profile + color scheme"
+
+    local konsole_src="${CONFIGS_DIR}/kde/konsole"
+    local konsole_dest="${HOME}/.local/share/konsole"
+
+    mkdir -p "$konsole_dest"
+
+    if [[ -f "${konsole_src}/MacOS.profile" ]]; then
+        cp "${konsole_src}/MacOS.profile" "${konsole_dest}/MacOS.profile"
+        info "Copied MacOS.profile → $konsole_dest/"
+    else
+        warn "MacOS.profile not found at $konsole_src — skipping"
+        return 0
+    fi
+
+    if [[ -f "${konsole_src}/MacOS.colorscheme" ]]; then
+        cp "${konsole_src}/MacOS.colorscheme" "${konsole_dest}/MacOS.colorscheme"
+        info "Copied MacOS.colorscheme → $konsole_dest/"
+    else
+        warn "MacOS.colorscheme not found at $konsole_src — color scheme may be missing"
+    fi
+
+    # Establecer el perfil por defecto en konsolerc
+    if command -v kwriteconfig6 &>/dev/null; then
+        kwriteconfig6 --file konsolerc --group "Desktop Entry" \
+            --key DefaultProfile MacOS.profile
+        info "Konsole default profile set to MacOS.profile"
+    else
+        warn "kwriteconfig6 not found — set default profile manually in Konsole settings"
+    fi
+
+    ok "Konsole profile installed (MacOS)"
 }
 
 # ── run_all ──────────────────────────────────────────────────────────────────
