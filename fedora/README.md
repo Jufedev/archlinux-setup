@@ -63,8 +63,9 @@ The script is safe to re-run. Each module is idempotent.
 | `--icons` | Clones + installs WhiteSur icons and cursors |
 | `--decorations` | Configures Aurorae window decorations, macOS left-side buttons |
 | `--wallpapers` | Clones + installs WhiteSur wallpapers, sets default background |
-| `--panel` | Applies macOS panel layout (top bar + bottom dock) via Plasma Scripting API |
+| `--panel` | Applies macOS panel layout (top bar + bottom dock) via Plasma Scripting API; clock shows 24h + date |
 | `--konsole` | Installs MacOS Konsole profile and color scheme, sets as default |
+| `--keyboard` | Sets English intl (AltGr dead keys) keyboard layout (KDE session + system-wide via localectl) |
 
 ## Known Limitations
 

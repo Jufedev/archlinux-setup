@@ -3,7 +3,7 @@
 # Fedora 42 + KDE Plasma 6 — Setup estilo macOS
 # Ejecutar como usuario normal después del primer boot
 # Uso: bash postinstall.sh [--all | --repos | --fonts | --apps | --themes |
-#          --gtk | --kvantum | --icons | --decorations | --wallpapers | --panel | --konsole]
+#          --gtk | --kvantum | --icons | --decorations | --wallpapers | --panel | --konsole | --keyboard]
 # Sin argumentos = muestra el uso
 # ============================================================================
 set -euo pipefail
@@ -548,6 +548,26 @@ install_konsole_profile() {
     ok "Konsole profile installed (MacOS)"
 }
 
+# ── Módulo 11: Keyboard layout ──────────────────────────────────────────────
+configure_keyboard() {
+    step "Keyboard layout — English intl (AltGr dead keys)"
+
+    # Sesión KDE (kxkbrc)
+    if command -v kwriteconfig6 &>/dev/null; then
+        kwriteconfig6 --file kxkbrc --group Layout --key Use true
+        kwriteconfig6 --file kxkbrc --group Layout --key LayoutList us
+        kwriteconfig6 --file kxkbrc --group Layout --key VariantList altgr-intl
+    else
+        warn "kwriteconfig6 not found — skipping KDE keyboard config"
+    fi
+
+    # System-wide (login SDDM + fallback)
+    sudo localectl set-x11-keymap us "" altgr-intl 2>&1 | tee -a "$LOG_FILE" \
+        || warn "localectl set-x11-keymap failed"
+
+    ok "Keyboard layout set (us, altgr-intl)"
+}
+
 # ── run_all ──────────────────────────────────────────────────────────────────
 run_all() {
     run_module "Repos (RPM Fusion + Flathub)" setup_repos
@@ -561,6 +581,7 @@ run_all() {
     run_module "Wallpapers"                    install_wallpapers
     run_module "Panel layout"                  apply_panel_layout
     run_module "Konsole profile"               install_konsole_profile
+    run_module "Keyboard layout"               configure_keyboard
 
     print_summary
 }
@@ -579,8 +600,9 @@ case "${1:-}" in
     --wallpapers)  run_module "Wallpapers"                    install_wallpapers;   print_summary ;;
     --panel)       run_module "Panel layout"                  apply_panel_layout;   print_summary ;;
     --konsole)     run_module "Konsole profile"               install_konsole_profile; print_summary ;;
+    --keyboard)    run_module "Keyboard layout"               configure_keyboard;       print_summary ;;
     *)
-        echo "Usage: $0 [--all | --repos | --fonts | --apps | --themes | --gtk | --kvantum | --icons | --decorations | --wallpapers | --panel | --konsole]"
+        echo "Usage: $0 [--all | --repos | --fonts | --apps | --themes | --gtk | --kvantum | --icons | --decorations | --wallpapers | --panel | --konsole | --keyboard]"
         exit 0
         ;;
 esac

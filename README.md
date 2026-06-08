@@ -210,6 +210,9 @@ KDE no usa "extensiones": el look se arma con un **layout de panel** (`fedora/co
 - **Barra superior** con Global Menu (el menú de la app activa, estilo macOS)
 - **Dock inferior flotante** (Icons-Only Task Manager)
 - **Decoraciones Aurorae** con botones a la izquierda (cerrar/minimizar/maximizar)
+- **Reloj en 24h con fecha** (configurado en el mismo script del panel)
+
+El módulo `--keyboard` configura el layout **English intl (AltGr dead keys)** tanto en la sesión KDE como a nivel sistema (SDDM + fallback via `localectl`).
 
 ---
 
