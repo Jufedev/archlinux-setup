@@ -519,6 +519,10 @@ apply_tweaks() {
     info "Cargando configuración GNOME desde gnome-macos.dconf..."
     dconf load / < "${CONFIGS_DIR}/gnome/gnome-macos.dconf"
 
+    # Layout de teclado system-wide (login GDM + sesión): English intl, AltGr dead keys
+    sudo localectl set-x11-keymap us "" altgr-intl 2>&1 | tee -a "$LOG_FILE" \
+        || warn "localectl set-x11-keymap falló (layout solo aplicará en la sesión GNOME)"
+
     if command -v gnome-extensions &>/dev/null; then
         info "Activando extensiones..."
         local exts=(
