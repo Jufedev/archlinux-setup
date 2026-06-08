@@ -172,7 +172,7 @@ En vez del metapaquete `gnome` (~40 apps), solo lo esencial.
 
 ### Fedora — KDE Spin
 
-**Sí:** RPM Fusion + Flathub, fuentes (Cascadia/Apple emoji/Inter/Windows libres), stack WhiteSur completo (Plasma + Kvantum + Aurorae + GTK + iconos + cursores + wallpapers), flameshot, podman, distrobox, Chrome (Flatpak), firewalld.
+**Sí:** RPM Fusion + Flathub, fuentes (Cascadia/Apple emoji/Inter/Windows libres), stack WhiteSur completo (Plasma + Kvantum + Aurorae + GTK + iconos + cursores + wallpapers), flameshot, podman, distrobox, Chrome + Edge (Flatpak), firewalld.
 
 **NO:** tema de SDDM (deprecado en Fedora 44+), zoom parabólico del dock *(widget sin mantener en Plasma 6)*. KDE ya trae Konsole, Dolphin, KRunner, etc. de fábrica.
 
@@ -194,5 +194,5 @@ En vez del metapaquete `gnome` (~40 apps), solo lo esencial.
 | Calendar | GNOME Calendar | KOrganizer |
 | iStatMenus | Vitals *(extensión)* | System Monitor widgets |
 | Safari / Chrome | Google Chrome *(AUR)* | Chrome *(Flatpak)* |
-| Edge | microsoft-edge-stable-bin *(AUR)* | Edge *(Flatpak, manual)* |
+| Edge | microsoft-edge-stable-bin *(AUR)* | Edge *(Flatpak)* |
 | Docker Desktop | Podman + Distrobox | Podman + Distrobox |

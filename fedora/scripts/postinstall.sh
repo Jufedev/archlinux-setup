@@ -270,7 +270,7 @@ install_apps() {
 
     # Apps de Flatpak (navegadores — Flatpak es la forma recomendada en Fedora inmutable/atómica)
     info "Installing browser Flatpaks..."
-    flatpak_install com.google.Chrome
+    flatpak_install com.google.Chrome com.microsoft.Edge
 
     ok "Apps, dev tools, and firewall configured"
 }

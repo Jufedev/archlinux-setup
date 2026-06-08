@@ -56,7 +56,7 @@ The script is safe to re-run. Each module is idempotent.
 | `--all` | Runs all modules in dependency order |
 | `--repos` | Enables RPM Fusion free + nonfree, adds Flathub, upgrades system |
 | `--fonts` | Installs Inter, Cascadia Code Nerd Font, Apple Color Emoji, Windows-equivalent fonts; applies KDE font config |
-| `--apps` | Installs flameshot, podman, distrobox, Chrome (Flatpak), enables firewalld |
+| `--apps` | Installs flameshot, podman, distrobox, Chrome + Edge (Flatpak), enables firewalld |
 | `--themes` | Clones + installs WhiteSur-kde (Plasma look-and-feel + Aurorae) |
 | `--gtk` | Clones + installs WhiteSur-gtk-theme (GTK3/GTK4 + libadwaita link) |
 | `--kvantum` | Installs Kvantum, sets WhiteSurDark widget style |
