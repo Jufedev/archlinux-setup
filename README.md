@@ -121,14 +121,67 @@ Sin argumentos abre un **menú interactivo**, o usá flags directos:
 
 - **Login macOS (GDM)** — `bash arch/scripts/postinstall.sh --gdm`. Aplica WhiteSur al login con wallpaper por hora. Va aparte porque requiere sudo + reiniciar GDM.
 - **Performance (CachyOS)** — ya viene en `--all`: agrega repos compilados para tu CPU (uplift real ~5–20%) + kernel BORE/EEVDF. Reiniciá y elegí `linux-cachyos` en GRUB.
-- **Dev con Distrobox** — Podman + Distrobox se instalan con `--apps`. Tu Arch queda limpio como capa visual y todo el trabajo vive en contenedores aislados que comparten tu `$HOME`:
-  ```bash
-  distrobox create --name dev --image archlinux:latest
-  distrobox enter dev
-  ```
-  Para un stack reproducible, definí un `Containerfile` (`FROM archlinux:latest` + tus paquetes), `podman build -t dev-env .` y creá contenedores desde esa imagen. Exportar al host: `distrobox-export --bin <ruta>` / `--app <nombre>`.
-- **SSH para GitHub sin tokens** — `bash shared/ssh-github.sh` genera una llave `ed25519` con passphrase, la agrega a `~/.ssh/config` e imprime la pública + passphrase una sola vez (guardalas en tu gestor). Dentro de Distrobox, levantá un `ssh-agent` por sesión: `eval "$(ssh-agent -s)" && ssh-add ~/.ssh/github_ed25519`.
 - **Monitor sin EDID** (resolución cae a `640x480`) — algunos monitores viejos o por adaptador no entregan EDID. Forzá el modo por parámetro de kernel en GRUB (`GRUB_CMDLINE_LINUX_DEFAULT="… video=DP-1:1440x900@60"`, luego `sudo grub-mkconfig -o /boot/grub/grub.cfg`). No va en los scripts porque el conector y la resolución cambian por máquina.
+
+---
+
+## Core (Arch + Fedora)
+
+Herramientas base, **iguales en las dos distros**: Distrobox se instala con `--apps` (Arch y Fedora) y el script de SSH vive en `shared/`. No dependen del escritorio.
+
+### Entornos de desarrollo con Distrobox
+
+Tu sistema queda limpio como capa visual; todo el trabajo pesado vive en contenedores aislados que se sienten nativos (acceden a tu display, red, `$HOME`, clipboard) pero podés romper y recrear sin tocar el host.
+
+```bash
+distrobox create --name dev --image archlinux:latest   # o fedora:latest, ubuntu, etc.
+distrobox enter dev
+# adentro instalás lo que quieras sin miedo
+```
+
+**Imagen reproducible (concepto AMI local).** En vez de instalar a mano cada vez, definís un `Containerfile` con tu stack y construís la imagen una sola vez:
+
+```dockerfile
+FROM archlinux:latest
+RUN pacman -Syu --noconfirm && pacman -S --noconfirm \
+    go python nodejs rust terraform aws-cli-v2 git vim
+```
+
+```bash
+podman build -t dev-env .
+distrobox create --name dev --image localhost/dev-env
+```
+
+**Integración con el host:**
+
+| Acción | Comando |
+|---|---|
+| Crear · entrar · salir | `distrobox create --name dev --image <img>` · `distrobox enter dev` · `exit` |
+| Listar · parar · borrar | `distrobox list` · `distrobox stop dev` · `distrobox rm dev` |
+| Exportar binario al host | `distrobox-export --bin /usr/bin/go --export-path ~/.local/bin` |
+| Exportar app al menú | `distrobox-export --app code` |
+
+Por defecto comparte tu `$HOME` — git, configs y llaves SSH disponibles sin copiar nada.
+
+### SSH para GitHub (sin tokens)
+
+```bash
+bash shared/ssh-github.sh
+```
+
+Genera una llave `ed25519` con **passphrase aleatoria**, agrega un bloque `Host github.com` a `~/.ssh/config`, e imprime la pública + la passphrase **una sola vez** (guardalas en tu gestor). Después ofrece pasar el `origin` de este repo de HTTPS a SSH.
+
+> **Dentro de Distrobox** el `ssh-agent` del host no entra, así que levantá uno por sesión y cargá la llave una vez:
+> ```bash
+> eval "$(ssh-agent -s)" && ssh-add ~/.ssh/github_ed25519
+> ```
+> Como `$HOME` se comparte, la llave en `~/.ssh` ya queda disponible en todos tus contenedores.
+
+| Flag | Efecto |
+|------|--------|
+| `--email <correo>` | Comentario de la llave (default: `usuario@hostname`) |
+| `--no-passphrase` | Llave sin passphrase (menos seguro) |
+| `--switch-remote` / `--no-switch-remote` | Cambia (o no) el remote a SSH sin preguntar |
 
 ---
 
