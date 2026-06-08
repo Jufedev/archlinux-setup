@@ -28,9 +28,8 @@ titlebar-font='Inter Medium 11'
 button-layout='close,minimize,maximize:'
 num-workspaces=1
 
-[org/gnome/desktop/peripherals/touchpad]
-tap-to-click=true
-natural-scroll=true
+[org/gnome/desktop/input-sources]
+sources=[('xkb', 'us+altgr-intl')]
 
 [org/gnome/mutter]
 experimental-features=['scale-monitor-framebuffer']
